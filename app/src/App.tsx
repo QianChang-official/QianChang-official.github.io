@@ -13,6 +13,7 @@ import Admin from './pages/Admin';
 import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 import AudioConsole from './pages/AudioConsole';
+import DifferentialSurround from './pages/DifferentialSurround';
 import MusicPlayer from './components/MusicPlayer';
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/admin" element={<Admin />} />
           <Route path="/login" element={<Login />} />
           <Route path="/audio" element={<AudioConsole />} />
+          <Route path="/surround" element={<DifferentialSurround />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
