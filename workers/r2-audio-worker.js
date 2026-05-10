@@ -53,6 +53,12 @@ async function listObjects(env, url) {
 }
 
 async function uploadObject(request, env) {
+  const maxBytes = 90 * 1024 * 1024;
+  const contentLength = request.headers.get('Content-Length');
+  if (contentLength && parseInt(contentLength, 10) > maxBytes) {
+    throw httpError(413, 'File too large. Maximum is 90MB.');
+  }
+
   if (env.UPLOAD_TOKEN) {
     const token = request.headers.get('x-upload-token') || '';
     if (token !== env.UPLOAD_TOKEN) {

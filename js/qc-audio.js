@@ -395,9 +395,14 @@
       text(this.storageStatus, '请选择要上传的音源文件。');
       return;
     }
+    var MAX_SIZE = 90 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      text(this.storageStatus, '文件大小 ' + formatSize(file.size) + ' 超过 90MB 限制，请压缩后重试。');
+      return;
+    }
     var form = new FormData();
     form.append('file', file);
-    text(this.storageStatus, '正在上传：' + file.name);
+    text(this.storageStatus, '正在上传：' + file.name + '（' + formatSize(file.size) + '）');
     fetch(api + '/api/audio/upload', {
       method: 'POST',
       body: form
