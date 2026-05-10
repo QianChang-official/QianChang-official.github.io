@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="theme-color" content="#18212b">
+  <meta name="description" content="Qianchang 音源控制台，支持网页播放、EQ、FLAC 访问、R2 上传下载与开发者删除权限。">
+  <title>音源控制台 - Qianchang</title>
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+  <link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+  <link rel="stylesheet" href="/css/main.css">
+  <script>var Fluid = window.Fluid || {};</script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/color-schema.js"></script>
+</head>
+<body class="qc-audio-page">
+  <nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar top-nav-collapse">
+    <div class="container">
+      <a class="navbar-brand" href="/"><strong>Qianchang</strong></a>
+      <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+              aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <div class="animated-icon"><span></span><span></span><span></span></div>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ml-auto text-center">
+          <li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i><span>首页</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="/audio/"><i class="iconfont icon-music"></i><span>音源</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i><span>博客</span></a></li>
+          <li class="nav-item" id="color-toggle-btn"><a class="nav-link" href="javascript:;" aria-label="Color Toggle"><i class="iconfont icon-dark" id="color-toggle-icon"></i></a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="qc-audio-shell" data-qc-audio data-public-base="https://pub-ae8ff9e688d7481da1eab0ed3dd2a2fd.r2.dev">
+    <section class="qc-audio-hero">
+      <div>
+        <span class="qc-section-label">R2 Audio Workspace</span>
+        <h1>音源控制台</h1>
+        <p>面向 FLAC、WAV、MP3 与 OGG 的网页播放工作台。播放器使用浏览器原生解码，EQ 使用 Web Audio API 滤波器链；上传和列表通过 Worker 接入 R2，删除需要开发者令牌。</p>
+      </div>
+      <div class="qc-audio-health">
+        <div><span>公共下载域</span><strong>r2.dev</strong></div>
+        <div><span>默认桶</span><strong>r2-server</strong></div>
+        <div><span>删除权限</span><strong>Developer</strong></div>
+      </div>
+    </section>
+
+    <section class="qc-console-grid">
+      <div class="qc-console-main">
+        <div class="qc-panel">
+          <div class="qc-panel-head">
+            <div>
+              <span class="qc-section-label">Playback</span>
+              <h2>播放与解码</h2>
+            </div>
+            <button class="qc-icon-btn" type="button" data-reset-eq title="重置 EQ">Flat</button>
+          </div>
+          <div class="qc-source-row">
+            <input data-audio-url type="url" placeholder="https://.../track.flac">
+            <button data-load-url type="button">载入 URL</button>
+          </div>
+          <label class="qc-upload-drop">
+            <input data-local-file type="file" accept="audio/*,.flac">
+            <span>选择本地音源试听</span>
+            <small>本地文件不会上传，适合先检查 FLAC 兼容性和 EQ 效果。</small>
+          </label>
+          <audio data-audio-player controls preload="metadata" crossorigin="anonymous"></audio>
+          <div class="qc-status" data-audio-status>等待载入音源</div>
+        </div>
+
+        <div class="qc-panel">
+          <div class="qc-panel-head">
+            <div>
+              <span class="qc-section-label">Equalizer</span>
+              <h2>8 段网页 EQ</h2>
+            </div>
+            <div class="qc-preset-row" data-eq-presets></div>
+          </div>
+          <div class="qc-eq-grid" data-eq-sliders></div>
+          <div class="qc-fidelity-row">
+            <label>预增益 <input data-preamp type="range" min="-12" max="6" step="0.5" value="-1"></label>
+            <label><input data-limiter type="checkbox" checked> 动态限幅</label>
+            <label><input data-hifi-mode type="checkbox" checked> FLAC 保真模式</label>
+          </div>
+        </div>
+      </div>
+
+      <aside class="qc-panel qc-storage-panel">
+        <div class="qc-panel-head">
+          <div>
+            <span class="qc-section-label">R2 Storage</span>
+            <h2>上传、下载与开发者删除</h2>
+          </div>
+        </div>
+        <label class="qc-field">
+          <span>Worker API</span>
+          <input data-api-base type="url" value="https://qianchang-r2-audio.3174837085.workers.dev" placeholder="https://your-worker.example.com">
+        </label>
+        <label class="qc-field">
+          <span>公共下载根地址</span>
+          <input data-public-base-input type="url" value="https://pub-ae8ff9e688d7481da1eab0ed3dd2a2fd.r2.dev">
+        </label>
+        <label class="qc-field">
+          <span>开发者删除令牌</span>
+          <input data-dev-token type="password" placeholder="只保存在当前浏览器">
+        </label>
+        <label class="qc-field">
+          <span>上传音源</span>
+          <input data-upload-file type="file" accept="audio/*,.flac">
+        </label>
+        <div class="qc-storage-actions">
+          <button data-upload type="button">上传到 R2</button>
+          <button data-refresh-list type="button">刷新列表</button>
+        </div>
+        <div class="qc-status" data-storage-status>请先配置 Worker API。</div>
+        <div class="qc-track-list" data-track-list></div>
+      </aside>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-content"><span>© Qianchang</span> · <a href="https://github.com/QianChang-official/QianChang-official.github.io" target="_blank" rel="nofollow noopener">GitHub</a></div>
+    </div>
+  </footer>
+
+  <script src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js"></script>
+  <script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script>
+  <script src="/js/events.js"></script>
+  <script src="/js/qc-audio.js"></script>
+  <script src="/js/boot.js"></script>
+</body>
+</html>

@@ -124,6 +124,13 @@
           
           
             <li class="nav-item">
+              <a class="nav-link" href="/audio/" target="_self">
+                <i class="iconfont icon-music"></i>
+                <span>音源</span>
+              </a>
+            </li>
+
+                    <li class="nav-item">
               <a class="nav-link" href="/projects/" target="_self">
                 <i class="iconfont icon-archive-fill"></i>
                 <span>项目</span>
@@ -182,14 +189,19 @@
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
+        <p class="qc-hero-kicker">Qianchang Audio Lab</p>
+        <h1 class="qc-hero-title">Qianchang</h1>
         <div class="h2">
           
             <span id="subtitle" data-typed-text="Engineering · Systems · Notes,Build systems, not just demos,Long-term engineering thinking"></span>
           
         </div>
 
-        
-      </div>
+        <div class="qc-hero-actions">
+          <a href="/audio/" class="qc-btn qc-btn-primary">进入音源控制台</a>
+          <a href="/archives/" class="qc-btn qc-btn-ghost">阅读博客</a>
+        </div>
+              </div>
 
       
         <div class="scroll-down-bar">
@@ -216,6 +228,46 @@
                 
 
 <h1 style="display: none">Qianchang</h1>
+  <section class="qc-overview" aria-label="站点概览">
+    <div class="qc-overview-copy">
+      <span class="qc-section-label">Redesigned Blog</span>
+      <h2>工程记录、音源管理和高质量网页播放集中在一个入口。</h2>
+      <p>首页保留文章流，同时加入面向 FLAC 与 Web Audio API 的音源控制台。上传、列目录和删除通过 Cloudflare Worker 连接 R2，删除接口只接受开发者令牌。</p>
+    </div>
+    <div class="qc-overview-stats">
+      <div>
+        <strong>8 Band</strong>
+        <span>网页 EQ</span>
+      </div>
+      <div>
+        <strong>R2</strong>
+        <span>对象存储</span>
+      </div>
+      <div>
+        <strong>FLAC</strong>
+        <span>原生优先</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="qc-audio-panel" aria-label="音源播放器">
+    <div class="qc-panel-head">
+      <div>
+        <span class="qc-section-label">Audio Source Console</span>
+        <h2>音源播放、解码访问与 R2 存储</h2>
+      </div>
+      <a class="qc-btn qc-btn-primary" href="/audio/">打开完整控制台</a>
+    </div>
+    <div class="qc-mini-player" data-qc-audio data-public-base="https://pub-ae8ff9e688d7481da1eab0ed3dd2a2fd.r2.dev">
+      <div class="qc-source-row">
+        <input data-audio-url type="url" placeholder="粘贴 FLAC / MP3 / WAV / OGG 音源 URL">
+        <button data-load-url type="button">载入</button>
+      </div>
+      <audio data-audio-player controls preload="metadata" crossorigin="anonymous"></audio>
+      <div class="qc-status" data-audio-status>等待载入音源</div>
+      <div class="qc-eq-compact" data-eq-sliders></div>
+    </div>
+  </section>
 
   <div class="row mx-auto index-card">
     
@@ -355,6 +407,9 @@
 
 
   <script  src="/js/local-search.js" ></script>
+
+
+  <script  src="/js/qc-audio.js" ></script>
 
 
 
