@@ -12,6 +12,7 @@ import About from './pages/About';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import NotFound from './pages/NotFound';
+import AudioConsole from './pages/AudioConsole';
 import MusicPlayer from './components/MusicPlayer';
 
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/audio" element={<AudioConsole />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

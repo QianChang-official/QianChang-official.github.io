@@ -25,6 +25,7 @@ export default function Navigation() {
 
   const navLinks = [
     { to: '/blog', label: t('nav.blog'), icon: FileText },
+    { to: '/audio', label: '音源', icon: Music },
     { to: '/timeline', label: t('nav.timeline'), icon: Clock },
     { to: '/gallery', label: t('nav.gallery'), icon: Image },
     { to: '/messages', label: t('nav.messages'), icon: MessageSquare },
@@ -33,7 +34,6 @@ export default function Navigation() {
   ];
 
   const externalLinks = [
-    { href: 'https://pub-ae8ff9e688d7481da1eab0ed3dd2a2fd.r2.dev', label: '音源', icon: Music },
     { href: 'https://github.com/QianChang-official?tab=repositories', label: '项目', icon: FolderGit2 },
     { href: 'https://github.com/QianChang-official', label: '社区', icon: UsersRound },
   ];
