@@ -33,7 +33,7 @@ export default function Navigation() {
   ];
 
   const externalLinks = [
-    { href: 'https://github.com/QianChang-official/QianChang-official.github.io', label: '音源', icon: Music },
+    { href: 'https://pub-ae8ff9e688d7481da1eab0ed3dd2a2fd.r2.dev', label: '音源', icon: Music },
     { href: 'https://github.com/QianChang-official?tab=repositories', label: '项目', icon: FolderGit2 },
     { href: 'https://github.com/QianChang-official', label: '社区', icon: UsersRound },
   ];
