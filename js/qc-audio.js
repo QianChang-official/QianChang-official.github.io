@@ -54,7 +54,8 @@
 
   function getStored(name, fallback) {
     try {
-      return localStorage.getItem(name) || fallback || '';
+      var v = localStorage.getItem(name);
+      return v === null ? (fallback || '') : v;
     } catch (e) {
       return fallback || '';
     }
@@ -349,7 +350,8 @@
         text(self.storageStatus, '已读取 ' + (payload.objects || []).length + ' 个对象。');
       })
       .catch(function (error) {
-        text(self.storageStatus, '列表读取失败：' + error.message);
+        console.error('[qc-audio] list error:', error);
+        text(self.storageStatus, '列表读取失败：' + (error.message || '网络错误'));
       });
   };
 
@@ -411,7 +413,8 @@
         self.refreshList();
       })
       .catch(function (error) {
-        text(self.storageStatus, '上传失败：' + error.message);
+        console.error('[qc-audio] upload error:', error);
+        text(self.storageStatus, '上传失败：' + (error.message || '网络错误'));
       });
   };
 
