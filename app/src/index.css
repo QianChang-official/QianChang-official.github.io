@@ -1,0 +1,303 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 流境：白底鎏金大理石 + 极光幻彩 */
+    --background: 40 20% 97%;
+    --foreground: 220 15% 18%;
+    --card: 40 25% 98%;
+    --card-foreground: 220 15% 18%;
+    --popover: 40 25% 98%;
+    --popover-foreground: 220 15% 18%;
+    --primary: 40 45% 55%;
+    --primary-foreground: 40 25% 98%;
+    --secondary: 40 15% 93%;
+    --secondary-foreground: 220 15% 18%;
+    --muted: 40 15% 93%;
+    --muted-foreground: 220 10% 45%;
+    --accent: 40 45% 55%;
+    --accent-foreground: 40 25% 98%;
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 40 25% 98%;
+    --border: 40 15% 85%;
+    --input: 40 15% 88%;
+    --ring: 40 45% 55%;
+    --radius: 0.5rem;
+
+    /* 流境色彩系统 */
+    --flux-gold: #c9a96e;
+    --flux-gold-light: #e8d5a3;
+    --flux-gold-deep: #a68b4b;
+    --flux-aurora-green: #4ecdc4;
+    --flux-aurora-pink: #e8a0bf;
+    --flux-aurora-purple: #b892d6;
+    --flux-aurora-blue: #7bb3d9;
+    --flux-marble: #faf8f5;
+    --flux-marble-dark: #f0ece6;
+    --flux-ink: #2d3436;
+    --flux-ink-light: #5a5a5a;
+    --flux-line: rgba(201, 169, 110, 0.25);
+  }
+
+  .dark {
+    --background: 220 15% 10%;
+    --foreground: 40 20% 95%;
+    --card: 220 15% 13%;
+    --card-foreground: 40 20% 95%;
+    --popover: 220 15% 13%;
+    --popover-foreground: 40 20% 95%;
+    --primary: 40 45% 55%;
+    --primary-foreground: 220 15% 10%;
+    --secondary: 220 15% 18%;
+    --secondary-foreground: 40 20% 95%;
+    --muted: 220 15% 18%;
+    --muted-foreground: 40 10% 60%;
+    --accent: 40 45% 55%;
+    --accent-foreground: 220 15% 10%;
+    --border: 220 15% 22%;
+    --input: 220 15% 22%;
+    --ring: 40 45% 55%;
+
+    --flux-marble: #0f1117;
+    --flux-marble-dark: #181a24;
+    --flux-ink: #eae6e1;
+    --flux-ink-light: #a09b94;
+    --flux-line: rgba(201, 169, 110, 0.2);
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Helvetica Neue', 'Noto Sans SC', 'PingFang SC', sans-serif;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: rgba(201, 169, 110, 0.25);
+    color: var(--flux-ink);
+  }
+}
+
+@layer components {
+  /* 大理石纹理背景 */
+  .marble-bg {
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(201, 169, 110, 0.04) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(184, 146, 214, 0.03) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(78, 205, 196, 0.02) 0%, transparent 70%),
+      linear-gradient(135deg, var(--flux-marble) 0%, var(--flux-marble-dark) 100%);
+  }
+
+  .dark .marble-bg {
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(201, 169, 110, 0.03) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(184, 146, 214, 0.03) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(78, 205, 196, 0.02) 0%, transparent 70%),
+      linear-gradient(135deg, var(--flux-marble) 0%, var(--flux-marble-dark) 100%);
+  }
+
+  /* 鎏金渐变文字 */
+  .gold-gradient-text {
+    background: linear-gradient(135deg, var(--flux-gold-deep) 0%, var(--flux-gold) 50%, var(--flux-gold-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* 极光渐变文字 */
+  .aurora-gradient-text {
+    background: linear-gradient(135deg, var(--flux-aurora-green) 0%, var(--flux-aurora-blue) 33%, var(--flux-aurora-purple) 66%, var(--flux-aurora-pink) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* 鎏金边框光晕 */
+  .gold-border-glow {
+    border: 1px solid var(--flux-line);
+    box-shadow:
+      0 0 20px rgba(201, 169, 110, 0.08),
+      inset 0 0 20px rgba(201, 169, 110, 0.03);
+    transition: all 0.3s ease;
+  }
+
+  .gold-border-glow:hover {
+    border-color: rgba(201, 169, 110, 0.4);
+    box-shadow:
+      0 0 30px rgba(201, 169, 110, 0.12),
+      inset 0 0 30px rgba(201, 169, 110, 0.06);
+  }
+
+  /* 鎏金按钮 */
+  .btn-gold {
+    background: linear-gradient(135deg, var(--flux-gold) 0%, var(--flux-gold-deep) 100%);
+    color: #fff;
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    border-radius: 9999px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow:
+      0 4px 15px rgba(201, 169, 110, 0.25),
+      0 8px 25px rgba(201, 169, 110, 0.1);
+  }
+
+  .btn-gold:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow:
+      0 6px 25px rgba(201, 169, 110, 0.35),
+      0 12px 40px rgba(201, 169, 110, 0.18);
+  }
+
+  .btn-gold:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  /* 极光按钮 */
+  .btn-aurora {
+    background: linear-gradient(135deg, var(--flux-aurora-green) 0%, var(--flux-aurora-blue) 50%, var(--flux-aurora-purple) 100%);
+    color: #fff;
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    border-radius: 9999px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow:
+      0 4px 15px rgba(78, 205, 196, 0.2),
+      0 8px 25px rgba(184, 146, 214, 0.12);
+  }
+
+  .btn-aurora:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow:
+      0 6px 25px rgba(78, 205, 196, 0.3),
+      0 12px 40px rgba(184, 146, 214, 0.2);
+  }
+
+  /* 奢华卡片 - 大理石风格 */
+  .card-luxury {
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(250, 248, 245, 0.95) 100%);
+    border: 1px solid var(--flux-line);
+    border-radius: 12px;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-luxury::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--flux-gold), var(--flux-aurora-green), var(--flux-aurora-purple), var(--flux-aurora-pink));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .card-luxury:hover::before {
+    opacity: 1;
+  }
+
+  .card-luxury:hover {
+    border-color: rgba(201, 169, 110, 0.3);
+    box-shadow:
+      0 8px 32px rgba(201, 169, 110, 0.08),
+      0 0 60px rgba(184, 146, 214, 0.04);
+    transform: translateY(-4px);
+  }
+
+  .dark .card-luxury {
+    background:
+      linear-gradient(145deg, rgba(25, 27, 35, 0.95) 0%, rgba(18, 20, 28, 0.98) 100%);
+  }
+
+  /* 区域标题 */
+  .section-title {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+
+  /* 毛玻璃面板 */
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(201, 169, 110, 0.15);
+  }
+
+  .dark .glass-panel {
+    background: rgba(18, 20, 28, 0.7);
+    border-color: rgba(201, 169, 110, 0.1);
+  }
+
+  /* 鎏金链接 */
+  .link-gold {
+    position: relative;
+    color: var(--flux-ink-light);
+    transition: color 0.3s ease;
+  }
+
+  .link-gold::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--flux-gold), var(--flux-gold-light));
+    transition: width 0.3s ease;
+  }
+
+  .link-gold:hover {
+    color: var(--flux-gold-deep);
+  }
+
+  .link-gold:hover::after {
+    width: 100%;
+  }
+
+  /* 导航栏 */
+  .nav-scrolled {
+    background: rgba(250, 248, 245, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--flux-line);
+  }
+
+  .dark .nav-scrolled {
+    background: rgba(15, 17, 23, 0.85);
+  }
+
+  /* 时间线 */
+  .timeline-line {
+    background: linear-gradient(to bottom, var(--flux-gold), var(--flux-aurora-green), var(--flux-aurora-purple));
+  }
+
+  /* 隐藏滚动条 */
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@layer utilities {
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+}
