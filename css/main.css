@@ -1123,11 +1123,23 @@ i.iconfont {
   color: var(--sec-text-color);
   font-size: 0.9rem;
 }
+.qc-visualizer-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+}
+.qc-visualizer-wrap canvas {
+  width: 100%;
+  height: 120px;
+  border-radius: 0.5rem;
+  background: rgba(0,0,0,0.35);
+}
 .qc-eq-compact,
 .qc-eq-grid {
   display: grid;
-  grid-template-columns: repeat(8, minmax(64px, 1fr));
-  gap: 0.7rem;
+  grid-template-columns: repeat(10, minmax(56px, 1fr));
+  gap: 0.5rem;
 }
 .qc-eq-band {
   display: grid;
@@ -1144,6 +1156,18 @@ i.iconfont {
   color: var(--sec-text-color);
   font-size: 0.78rem;
   font-weight: 800;
+}
+.qc-eq-band select {
+  width: 3.6rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border: 1px solid rgba(24,33,43,0.14);
+  border-radius: 0.3rem;
+  padding: 0.15rem 0.1rem;
+  background: var(--board-bg-color);
+  color: var(--text-color);
+  text-align: center;
+  cursor: pointer;
 }
 .qc-eq-band input[type="range"] {
   width: 7rem;
@@ -1292,9 +1316,12 @@ i.iconfont {
     align-items: stretch;
     flex-direction: column;
   }
+  .qc-visualizer-wrap {
+    grid-template-columns: 1fr;
+  }
   .qc-eq-compact,
   .qc-eq-grid {
-    grid-template-columns: repeat(4, minmax(62px, 1fr));
+    grid-template-columns: repeat(5, minmax(56px, 1fr));
   }
   .qc-audio-health,
   .qc-overview-stats {

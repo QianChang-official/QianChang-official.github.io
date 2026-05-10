@@ -76,9 +76,13 @@
           <div class="qc-panel-head">
             <div>
               <span class="qc-section-label">Equalizer</span>
-              <h2>8 段网页 EQ</h2>
+              <h2>10 段 EQ + 实时频谱</h2>
             </div>
             <div class="qc-preset-row" data-eq-presets></div>
+          </div>
+          <div class="qc-visualizer-wrap">
+            <canvas data-spectrum-canvas width="600" height="120"></canvas>
+            <canvas data-response-canvas width="600" height="120"></canvas>
           </div>
           <div class="qc-eq-grid" data-eq-sliders></div>
           <div class="qc-fidelity-row">
@@ -114,9 +118,9 @@
         </label>
         <div class="qc-storage-actions">
           <button data-upload type="button">上传到 R2</button>
-          <button data-refresh-list type="button">刷新列表</button>
+          <button data-refresh-list type="button">获取音源</button>
         </div>
-        <div class="qc-status" data-storage-status>请先配置 Worker API。</div>
+        <div class="qc-status" data-storage-status>点击「获取音源」加载 R2 中的音频列表。</div>
         <div class="qc-track-list" data-track-list></div>
       </aside>
     </section>

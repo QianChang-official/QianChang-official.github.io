@@ -47,7 +47,8 @@ async function listObjects(env, url) {
       key: object.key,
       size: object.size,
       uploaded: object.uploaded,
-      contentType: object.httpMetadata && object.httpMetadata.contentType
+      contentType: object.httpMetadata && object.httpMetadata.contentType,
+      originalName: object.customMetadata && object.customMetadata.originalName
     }))
   };
 }
@@ -119,10 +120,10 @@ function buildAudioKey(name) {
 function sanitizeName(name) {
   return String(name || 'audio')
     .normalize('NFKD')
-    .replace(/[^\w.\-]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 120) || 'audio';
+    .replace(/[\x00-\x1f\x7f]/g, '')
+    .replace(/[<>:"/\\|?*]/g, '-')
+    .trim()
+    .slice(0, 200) || 'audio';
 }
 
 function isAllowedAudio(contentType, name) {
