@@ -385,27 +385,80 @@ export default function AudioConsole() {
   /* ========== Handlers ========== */
   const loadUrl = useCallback((url: string, label?: string) => {
     if (!url) { setStatusMsg('请输入可访问的音源 URL'); return; }
-    globalAudio.src = url.trim();
-    setStatusMsg('正在载入：' + (label || url));
+    // Parse filename if no label provided
+    const parsedLabel = label || parseFilename(new URL(url).pathname.split('/').pop() || 'Unknown');
+    const newTrack = {
+      title: parsedLabel.title,
+      artist: parsedLabel.artist,
+      url: url.trim(),
+      size: undefined
+    };
+    // Add to playlist and play
+    setTracks([newTrack, ...tracks]);
+    setCurrentTrack(0);
+    globalAudio.src = newTrack.url;
+    setStatusMsg('正在载入：' + (label || newTrack.title));
     globalAudio.play().catch(() => setPlayerError('播放失败'));
     setIsPlaying(true);
-  }, [setIsPlaying]);
+  }, [setIsPlaying, tracks, setTracks, setCurrentTrack]);
+
   const loadLocalFile = useCallback((file: File) => {
     if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-    const url = URL.createObjectURL(file); objectUrlRef.current = url; loadUrl(url, file.name);
-  }, [loadUrl]);
+    const url = URL.createObjectURL(file); objectUrlRef.current = url;
+    const parsedLabel = parseFilename(file.name);
+    const newTrack = {
+      title: parsedLabel.title,
+      artist: parsedLabel.artist,
+      url: url,
+      size: file.size
+    };
+    // Add to playlist and play
+    setTracks([newTrack, ...tracks]);
+    setCurrentTrack(0);
+    setStatusMsg('正在载入：' + file.name);
+    globalAudio.src = newTrack.url;
+    globalAudio.play().catch(() => setPlayerError('播放失败'));
+    setIsPlaying(true);
+  }, [setIsPlaying, tracks, setTracks, setCurrentTrack]);
   const handleTogglePlay = useCallback(() => {
+    // If no track is playing and we have tracks, play currentTrack or first track
+    if (!globalAudio.src && tracks.length > 0) {
+      const url = tracks[currentTrack]?.url;
+      if (url) {
+        globalAudio.src = url;
+        setIsPlaying(true);
+        setStatusMsg('正在播放：' + tracks[currentTrack].title);
+        globalAudio.play().catch(() => setPlayerError('播放失败'));
+        return;
+      }
+    }
+    // Otherwise use the store's togglePlay
     if (tracks.length === 0 && !globalAudio.src) return;
     togglePlay();
-  }, [tracks.length, togglePlay]);
+  }, [tracks.length, currentTrack, globalAudio.src, togglePlay, setIsPlaying, setStatusMsg]);
+
   const handleNext = useCallback(() => {
     if (tracks.length === 0) return;
-    nextTrack();
-  }, [tracks.length, nextTrack]);
+    const next = (currentTrack + 1) % tracks.length;
+    const url = tracks[next]?.url;
+    if (url) {
+      globalAudio.src = url;
+      setCurrentTrack(next);
+      globalAudio.play().catch(() => setPlayerError('播放失败'));
+    }
+  }, [tracks.length, currentTrack, setCurrentTrack]);
+
   const handlePrev = useCallback(() => {
     if (tracks.length === 0) return;
-    prevTrack();
-  }, [tracks.length, prevTrack]);
+    const prev = (currentTrack - 1 + tracks.length) % tracks.length;
+    const url = tracks[prev]?.url;
+    if (url) {
+      globalAudio.currentTime = 0;
+      globalAudio.src = url;
+      setCurrentTrack(prev);
+      globalAudio.play().catch(() => setPlayerError('播放失败'));
+    }
+  }, [tracks.length, currentTrack, setCurrentTrack]);
 
   const setBand = useCallback((index: number, patch: Partial<EqBandConfig>) => {
     setEqBands(prev => {
@@ -546,7 +599,7 @@ export default function AudioConsole() {
                   onKeyDown={e => { if (e.key === 'Enter') loadUrl((e.target as HTMLInputElement).value); }} />
                 <button onClick={e => loadUrl((e.currentTarget.previousElementSibling as HTMLInputElement).value)}
                   className="px-4 rounded-lg text-sm font-medium transition-all" style={{ background: 'var(--flux-gold)', color: 'var(--flux-marble)' }}>
-                  载入 URL
+                  载入并添加到列表
                 </button>
               </div>
 
@@ -554,15 +607,22 @@ export default function AudioConsole() {
                 style={{ borderColor: 'var(--flux-gold)', background: 'rgba(212,175,55,0.05)' }}>
                 <input type="file" accept="audio/*,.flac" className="hidden"
                   onChange={e => { const f = e.target.files?.[0]; if (f) loadLocalFile(f); }} />
-                <span className="text-sm font-medium" style={{ color: 'var(--flux-ink)' }}>选择本地音源试听</span>
+                <span className="text-sm font-medium" style={{ color: 'var(--flux-ink)' }}>选择本地音源添加到播放列表</span>
                 <span className="text-xs" style={{ color: 'var(--flux-ink-light)' }}>本地文件不会上传，适合先检查 FLAC 兼容性和 EQ 效果</span>
               </label>
 
               <div ref={el => {
                 if (el && globalAudio.parentElement !== el) {
+                  // Clear existing element first
+                  while (el.firstChild) {
+                    el.removeChild(el.firstChild);
+                  }
                   globalAudio.controls = true;
                   globalAudio.className = 'w-full mb-3';
                   el.appendChild(globalAudio);
+                } else if (el && globalAudio.parentElement === el) {
+                  // Update src when source changes
+                  globalAudio.load();
                 }
               }} />
 
@@ -787,7 +847,15 @@ export default function AudioConsole() {
               ) : (
                 <div className="space-y-2 max-h-80 overflow-y-auto scrollbar-hidden">
                   {tracks.map((track, i) => (
-                    <button key={i} onClick={() => playTrack(i)}
+                    <button key={i} onClick={() => {
+                      if (!track.url) return;
+                      globalAudio.src = track.url;
+                      setTracks(tracks); // Sync playlist state
+                      setCurrentTrack(i);
+                      setIsPlaying(true);
+                      setStatusMsg('正在播放：' + track.title);
+                      globalAudio.play().catch(() => setPlayerError('播放失败'));
+                    }}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all border ${currentTrack === i ? 'border-amber-500/30' : 'border-transparent hover:border-[var(--flux-line)]'}`}
                       style={currentTrack === i ? { background: 'rgba(212,175,55,0.08)' } : {}}>
                       <span className="text-xs w-5 text-center font-bold" style={{ color: 'var(--flux-ink-light)' }}>{i + 1}</span>
