@@ -220,6 +220,16 @@ export default function AudioConsole() {
   const objectUrlRef = useRef<string | null>(null);
   const graphReadyRef = useRef(false);
 
+  // Mutable refs for audio graph (avoid re-creating initGraph on every slider move)
+  const eqBandsRef = useRef<EqBandConfig[]>(JSON.parse(JSON.stringify(DEFAULT_EQ)));
+  const preampRefValue = useRef(-1);
+  const limiterOnRefValue = useRef(true);
+
+  // Sync state → refs
+  useEffect(() => { eqBandsRef.current = eqBands; }, [eqBands]);
+  useEffect(() => { preampRefValue.current = preamp; }, [preamp]);
+  useEffect(() => { limiterOnRefValue.current = limiterOn; }, [limiterOn]);
+
   /* ========== Audio Graph ========== */
   const initGraph = useCallback(async () => {
     if (graphReadyRef.current) return;
@@ -251,19 +261,20 @@ export default function AudioConsole() {
     analyserOutRef.current = aOut;
 
     const pre = ctx.createGain();
-    pre.gain.value = Math.pow(10, preamp / 20);
+    pre.gain.value = Math.pow(10, preampRefValue.current / 20);
     preampRef.current = pre;
 
     const comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = limiterOn ? -4 : 0;
+    comp.threshold.value = limiterOnRefValue.current ? -4 : 0;
     comp.knee.value = 10;
-    comp.ratio.value = limiterOn ? 6 : 1;
+    comp.ratio.value = limiterOnRefValue.current ? 6 : 1;
     comp.attack.value = 0.003;
     comp.release.value = 0.18;
     compressorRef.current = comp;
 
     // Build EQ chain
-    filtersRef.current = eqBands.map(b => {
+    const currentBands = eqBandsRef.current;
+    filtersRef.current = currentBands.map(b => {
       const f = ctx.createBiquadFilter();
       f.type = b.type;
       f.frequency.value = b.freq;
@@ -289,7 +300,7 @@ export default function AudioConsole() {
     aOut.connect(ctx.destination);
 
     graphReadyRef.current = true;
-  }, [eqBands, preamp, limiterOn]);
+  }, [surroundEnabled]);
 
   /* ---- Update EQ params ---- */
   useEffect(() => {
@@ -344,10 +355,8 @@ export default function AudioConsole() {
 
   /* ========== Player lifecycle ========== */
   useEffect(() => {
-    const audio = new Audio();
-    audio.crossOrigin = 'anonymous';
-    audio.volume = 0.6;
-    audioRef.current = audio;
+    const audio = audioRef.current;
+    if (!audio) return;
 
     const onEnded = () => { if (currentTrack < tracks.length - 1) setCurrentTrack(p => p + 1); else setIsPlaying(false); };
     const onError = () => { setPlayerError('音源载入失败'); setIsPlaying(false); };
@@ -360,15 +369,19 @@ export default function AudioConsole() {
     audio.addEventListener('loadedmetadata', onLoaded);
 
     return () => {
-      audio.pause(); audio.src = '';
       audio.removeEventListener('ended', onEnded);
       audio.removeEventListener('error', onError);
       audio.removeEventListener('play', onPlay);
       audio.removeEventListener('loadedmetadata', onLoaded);
+    };
+  }, [currentTrack, tracks.length, initGraph]);
+
+  useEffect(() => {
+    return () => {
       if (audioCtxRef.current) audioCtxRef.current.close();
       if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
     };
-  }, [currentTrack, tracks.length, initGraph]);
+  }, []);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -387,7 +400,7 @@ export default function AudioConsole() {
   /* ========== Handlers ========== */
   const loadUrl = useCallback((url: string, label?: string) => {
     if (!audioRef.current || !url) { setStatusMsg('请输入可访问的音源 URL'); return; }
-    audioRef.current.src = url.trim(); audioRef.current.load();
+    audioRef.current.src = url.trim();
     setStatusMsg('正在载入：' + (label || url)); setIsPlaying(true);
   }, []);
   const loadLocalFile = useCallback((file: File) => {
@@ -549,7 +562,7 @@ export default function AudioConsole() {
                 <span className="text-xs" style={{ color: 'var(--flux-ink-light)' }}>本地文件不会上传，适合先检查 FLAC 兼容性和 EQ 效果</span>
               </label>
 
-              <audio ref={el => { if (el) audioRef.current = el; }} controls preload="metadata" crossOrigin="anonymous" className="w-full mb-3" />
+              <audio ref={audioRef} controls preload="metadata" crossOrigin="anonymous" className="w-full mb-3" />
 
               <div className="rounded-lg px-3 py-2 text-sm mb-4" style={{ background: 'rgba(0,0,0,0.04)', color: 'var(--flux-ink-light)' }}>
                 {playerError ? (
