@@ -4,7 +4,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useTheme } from '@/hooks/useTheme';
 import {
   Sun, Moon, Menu, X, Globe, LayoutDashboard,
-  Music, FolderGit2, UsersRound, Radio,
+  FolderGit2, UsersRound, Radio,
   FileText, Clock, Image, MessageSquare, Link as LinkIcon, User
 } from 'lucide-react';
 
@@ -25,7 +25,6 @@ export default function Navigation() {
 
   const navLinks = [
     { to: '/blog', label: t('nav.blog'), icon: FileText },
-    { to: '/audio', label: '音源', icon: Music },
     { to: '/surround', label: '环绕', icon: Radio },
     { to: '/timeline', label: t('nav.timeline'), icon: Clock },
     { to: '/gallery', label: t('nav.gallery'), icon: Image },
