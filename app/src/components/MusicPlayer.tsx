@@ -1,17 +1,13 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Play, Pause, Volume2, Headphones, SkipForward, SkipBack, Shuffle, Repeat, Repeat1, ListMusic, Loader2 } from 'lucide-react';
+import { useAudioStore } from '@/hooks/useAudioStore';
+import { globalAudio } from '@/stores/audioStore';
 
 interface AudioFile {
   name: string;
   url: string;
   size: number;
   lastModified: string;
-}
-
-interface Track {
-  title: string;
-  artist: string;
-  url: string;
 }
 
 type PlayMode = 'sequential' | 'loop-all' | 'loop-one' | 'random';
@@ -45,17 +41,14 @@ function parseFilename(name: string): { artist: string; title: string } {
 }
 
 export default function MusicPlayer() {
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState(0);
+  const { tracks, currentTrack, isPlaying, togglePlay, playTrack, setTracks } = useAudioStore();
   const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [playMode, setPlayMode] = useState<PlayMode>('sequential');
   const [playedRandomIndices, setPlayedRandomIndices] = useState<number[]>([]);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Fetch tracks from Cloudflare R2
+  // Fetch tracks from Cloudflare R2 and sync to global store
   useEffect(() => {
     let cancelled = false;
     fetch(WORKER_API)
@@ -63,10 +56,11 @@ export default function MusicPlayer() {
         if (!res.ok) throw new Error('Failed to fetch audio list');
         return res.json();
       })
-      .then((data: AudioFile[]) => {
+      .then((data: any) => {
         if (cancelled) return;
-        const parsed = data.map((f) => {
-          const { artist, title } = parseFilename(f.name);
+        const files = data.objects || data || [];
+        const parsed = files.map((f: any) => {
+          const { artist, title } = parseFilename(f.name || f.key || '');
           return { artist, title, url: f.url };
         });
         setTracks(parsed);
@@ -78,87 +72,14 @@ export default function MusicPlayer() {
         setError(true);
       });
     return () => { cancelled = true; };
+  }, [setTracks]);
+
+  // Listen to global audio errors
+  useEffect(() => {
+    const onError = () => setError(true);
+    globalAudio.addEventListener('error', onError);
+    return () => globalAudio.removeEventListener('error', onError);
   }, []);
-
-  // Initialize audio element
-  useEffect(() => {
-    const audio = new Audio();
-    audio.crossOrigin = 'anonymous';
-    audio.volume = 0.5;
-    audioRef.current = audio;
-
-    const handleEnded = () => {
-      if (tracks.length === 0) return;
-      switch (playMode) {
-        case 'loop-one':
-          audio.currentTime = 0;
-          audio.play().catch(() => setIsPlaying(false));
-          break;
-        case 'sequential':
-          if (currentTrack < tracks.length - 1) {
-            setCurrentTrack((prev) => prev + 1);
-          } else {
-            setIsPlaying(false);
-          }
-          break;
-        case 'loop-all':
-          setCurrentTrack((prev) => (prev + 1) % tracks.length);
-          break;
-        case 'random':
-          setCurrentTrack((prev) => {
-            let nextIdx: number;
-            let newPlayed = [...playedRandomIndices, prev];
-            if (newPlayed.length >= tracks.length) {
-              newPlayed = [prev];
-            }
-            do {
-              nextIdx = Math.floor(Math.random() * tracks.length);
-            } while (newPlayed.includes(nextIdx) && tracks.length > 1);
-            setPlayedRandomIndices(newPlayed);
-            return nextIdx;
-          });
-          break;
-      }
-    };
-
-    const handleError = () => {
-      setError(true);
-      setIsPlaying(false);
-    };
-
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('error', handleError);
-
-    return () => {
-      audio.pause();
-      audio.src = '';
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('error', handleError);
-    };
-  }, [tracks.length, playMode, currentTrack, playedRandomIndices]);
-
-  // Load and play when track or isPlaying changes
-  useEffect(() => {
-    if (!audioRef.current || tracks.length === 0) return;
-    const audio = audioRef.current;
-    if (isPlaying) {
-      if (audio.src !== tracks[currentTrack].url) {
-        audio.src = tracks[currentTrack].url;
-      }
-      audio.play().catch(() => {
-        setError(true);
-        setIsPlaying(false);
-      });
-    } else {
-      audio.pause();
-    }
-  }, [isPlaying, currentTrack, tracks]);
-
-  const togglePlay = useCallback(() => {
-    if (tracks.length === 0) return;
-    setError(false);
-    setIsPlaying((p) => !p);
-  }, [tracks.length]);
 
   const handleNext = useCallback(() => {
     if (tracks.length === 0) return;
@@ -173,19 +94,22 @@ export default function MusicPlayer() {
         nextIdx = Math.floor(Math.random() * tracks.length);
       } while (newPlayed.includes(nextIdx) && tracks.length > 1);
       setPlayedRandomIndices(newPlayed);
-      setCurrentTrack(nextIdx);
+      playTrack(nextIdx);
+    } else if (playMode === 'loop-one') {
+      globalAudio.currentTime = 0;
+      globalAudio.play().catch(() => setError(true));
     } else {
-      setCurrentTrack((prev) => (prev + 1) % tracks.length);
+      const next = (currentTrack + 1) % tracks.length;
+      playTrack(next);
     }
-    setIsPlaying(true);
-  }, [tracks.length, playMode, currentTrack, playedRandomIndices]);
+  }, [tracks.length, playMode, currentTrack, playedRandomIndices, playTrack]);
 
   const handlePrev = useCallback(() => {
     if (tracks.length === 0) return;
     setError(false);
-    setCurrentTrack((prev) => (prev - 1 + tracks.length) % tracks.length);
-    setIsPlaying(true);
-  }, [tracks.length]);
+    const prev = (currentTrack - 1 + tracks.length) % tracks.length;
+    playTrack(prev);
+  }, [tracks.length, currentTrack, playTrack]);
 
   const toggleMode = useCallback(() => {
     const modes: PlayMode[] = ['sequential', 'loop-all', 'loop-one', 'random'];
@@ -234,7 +158,7 @@ export default function MusicPlayer() {
               onClick={() => setExpanded(false)}
               className="p-1 rounded text-[var(--flux-ink-light)] hover:text-[var(--flux-ink)] transition-colors"
             >
-              <span className="text-lg leading-none">&times;</span>
+              <span className="text-lg leading-none">×</span>
             </button>
           </div>
 
@@ -274,7 +198,7 @@ export default function MusicPlayer() {
                 <SkipBack className="w-4 h-4" />
               </button>
               <button
-                onClick={togglePlay}
+                onClick={() => { setError(false); togglePlay(); }}
                 disabled={tracks.length === 0}
                 className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
                   isPlaying
@@ -314,9 +238,8 @@ export default function MusicPlayer() {
                   <button
                     key={i}
                     onClick={() => {
-                      setCurrentTrack(i);
                       setError(false);
-                      setIsPlaying(true);
+                      playTrack(i);
                     }}
                     className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-all ${
                       currentTrack === i

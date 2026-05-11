@@ -4,6 +4,8 @@ import {
   Trash2, Download, Music, Loader2, AlertCircle, CheckCircle2,
   BarChart3, Radio, RotateCcw, Zap, Activity, Waves, Mic2, SlidersHorizontal
 } from 'lucide-react';
+import { useAudioStore } from '@/hooks/useAudioStore';
+import { globalAudio } from '@/stores/audioStore';
 
 /* ========== R2 Types ========== */
 interface R2Object {
@@ -174,10 +176,13 @@ function parseFilename(name: string): { artist: string; title: string } {
 
 /* ========== Component ========== */
 export default function AudioConsole() {
-  /* ---- Player state ---- */
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [currentTrack, setCurrentTrack] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+  /* ---- Global audio store ---- */
+  const {
+    tracks, currentTrack, isPlaying,
+    togglePlay, playTrack, nextTrack, prevTrack, setTracks, setIsPlaying,
+  } = useAudioStore();
+
+  /* ---- Local state ---- */
   const [playerError, setPlayerError] = useState('');
   const [statusMsg, setStatusMsg] = useState('等待载入音源');
 
@@ -204,7 +209,6 @@ export default function AudioConsole() {
   const [loadingList, setLoadingList] = useState(false);
 
   /* ---- Refs ---- */
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const surroundRef = useRef<AudioWorkletNode | null>(null);
@@ -233,7 +237,7 @@ export default function AudioConsole() {
   /* ========== Audio Graph ========== */
   const initGraph = useCallback(async () => {
     if (graphReadyRef.current) return;
-    const audio = audioRef.current;
+    const audio = globalAudio;
     if (!audio) return;
 
     const AC = window.AudioContext || (window as any).webkitAudioContext;
@@ -355,26 +359,19 @@ export default function AudioConsole() {
 
   /* ========== Player lifecycle ========== */
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    const audio = globalAudio;
 
-    const onEnded = () => { if (currentTrack < tracks.length - 1) setCurrentTrack(p => p + 1); else setIsPlaying(false); };
-    const onError = () => { setPlayerError('音源载入失败'); setIsPlaying(false); };
     const onPlay = () => { initGraph(); if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume(); };
     const onLoaded = () => { setStatusMsg('已载入：' + decodeURIComponent(audio.currentSrc.split('/').pop() || '')); setPlayerError(''); };
 
-    audio.addEventListener('ended', onEnded);
-    audio.addEventListener('error', onError);
     audio.addEventListener('play', onPlay);
     audio.addEventListener('loadedmetadata', onLoaded);
 
     return () => {
-      audio.removeEventListener('ended', onEnded);
-      audio.removeEventListener('error', onError);
       audio.removeEventListener('play', onPlay);
       audio.removeEventListener('loadedmetadata', onLoaded);
     };
-  }, [currentTrack, tracks.length, initGraph]);
+  }, [initGraph]);
 
   useEffect(() => {
     return () => {
@@ -383,33 +380,32 @@ export default function AudioConsole() {
     };
   }, []);
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || tracks.length === 0) return;
-    if (isPlaying) {
-      const url = tracks[currentTrack]?.url;
-      if (url && audio.src !== url) audio.src = url;
-      audio.play().catch(() => { setPlayerError('播放失败'); setIsPlaying(false); });
-    } else {
-      audio.pause();
-    }
-  }, [isPlaying, currentTrack, tracks]);
-
   useEffect(() => { refreshList(); }, []);
 
   /* ========== Handlers ========== */
   const loadUrl = useCallback((url: string, label?: string) => {
-    if (!audioRef.current || !url) { setStatusMsg('请输入可访问的音源 URL'); return; }
-    audioRef.current.src = url.trim();
-    setStatusMsg('正在载入：' + (label || url)); setIsPlaying(true);
-  }, []);
+    if (!url) { setStatusMsg('请输入可访问的音源 URL'); return; }
+    globalAudio.src = url.trim();
+    setStatusMsg('正在载入：' + (label || url));
+    globalAudio.play().catch(() => setPlayerError('播放失败'));
+    setIsPlaying(true);
+  }, [setIsPlaying]);
   const loadLocalFile = useCallback((file: File) => {
     if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
     const url = URL.createObjectURL(file); objectUrlRef.current = url; loadUrl(url, file.name);
   }, [loadUrl]);
-  const togglePlay = useCallback(() => { if (tracks.length === 0 && !audioRef.current?.src) return; setIsPlaying(p => !p); }, [tracks.length]);
-  const handleNext = useCallback(() => { if (tracks.length === 0) return; setCurrentTrack(p => (p + 1) % tracks.length); setIsPlaying(true); }, [tracks.length]);
-  const handlePrev = useCallback(() => { if (tracks.length === 0) return; setCurrentTrack(p => (p - 1 + tracks.length) % tracks.length); setIsPlaying(true); }, [tracks.length]);
+  const handleTogglePlay = useCallback(() => {
+    if (tracks.length === 0 && !globalAudio.src) return;
+    togglePlay();
+  }, [tracks.length, togglePlay]);
+  const handleNext = useCallback(() => {
+    if (tracks.length === 0) return;
+    nextTrack();
+  }, [tracks.length, nextTrack]);
+  const handlePrev = useCallback(() => {
+    if (tracks.length === 0) return;
+    prevTrack();
+  }, [tracks.length, prevTrack]);
 
   const setBand = useCallback((index: number, patch: Partial<EqBandConfig>) => {
     setEqBands(prev => {
@@ -562,7 +558,13 @@ export default function AudioConsole() {
                 <span className="text-xs" style={{ color: 'var(--flux-ink-light)' }}>本地文件不会上传，适合先检查 FLAC 兼容性和 EQ 效果</span>
               </label>
 
-              <audio ref={audioRef} controls preload="metadata" crossOrigin="anonymous" className="w-full mb-3" />
+              <div ref={el => {
+                if (el && globalAudio.parentElement !== el) {
+                  globalAudio.controls = true;
+                  globalAudio.className = 'w-full mb-3';
+                  el.appendChild(globalAudio);
+                }
+              }} />
 
               <div className="rounded-lg px-3 py-2 text-sm mb-4" style={{ background: 'rgba(0,0,0,0.04)', color: 'var(--flux-ink-light)' }}>
                 {playerError ? (
@@ -767,7 +769,7 @@ export default function AudioConsole() {
                   <button onClick={handlePrev} disabled={tracks.length === 0}
                     className="p-2 rounded-lg border transition-all disabled:opacity-30"
                     style={{ borderColor: 'var(--flux-line)', color: 'var(--flux-ink-light)' }}><SkipBack className="w-4 h-4" /></button>
-                  <button onClick={togglePlay} disabled={tracks.length === 0 && !audioRef.current?.src}
+                  <button onClick={handleTogglePlay} disabled={tracks.length === 0 && !globalAudio.src}
                     className="p-2 rounded-lg transition-all disabled:opacity-30"
                     style={{ background: 'var(--flux-gold)', color: 'var(--flux-marble)' }}>
                     {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
@@ -785,7 +787,7 @@ export default function AudioConsole() {
               ) : (
                 <div className="space-y-2 max-h-80 overflow-y-auto scrollbar-hidden">
                   {tracks.map((track, i) => (
-                    <button key={i} onClick={() => { setCurrentTrack(i); setIsPlaying(true); }}
+                    <button key={i} onClick={() => playTrack(i)}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all border ${currentTrack === i ? 'border-amber-500/30' : 'border-transparent hover:border-[var(--flux-line)]'}`}
                       style={currentTrack === i ? { background: 'rgba(212,175,55,0.08)' } : {}}>
                       <span className="text-xs w-5 text-center font-bold" style={{ color: 'var(--flux-ink-light)' }}>{i + 1}</span>
