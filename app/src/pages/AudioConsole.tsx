@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Play, Pause, SkipBack, SkipForward, Upload, RefreshCw,
   Trash2, Download, Music, Loader2, AlertCircle, CheckCircle2,
-  BarChart3, Radio, RotateCcw, Zap, Activity, Waves, Mic2, SlidersHorizontal
+  Radio, Activity, Waves
 } from 'lucide-react';
 import { useAudioStore } from '@/hooks/useAudioStore';
 import { globalAudio } from '@/stores/audioStore';
@@ -14,14 +14,6 @@ interface R2Object {
   uploaded: string;
   contentType?: string;
   originalName?: string;
-}
-
-interface Track {
-  title: string;
-  artist: string;
-  url: string;
-  key?: string;
-  size?: number;
 }
 
 /* ========== EQ Types ========== */
@@ -174,12 +166,21 @@ function parseFilename(name: string): { artist: string; title: string } {
   return { artist: 'Unknown', title: clean };
 }
 
+function loadTrackUrl(url: string, label?: string): { artist: string; title: string; url: string } {
+  const displayName = label || new URL(url).pathname.split('/').pop() || 'Unknown';
+  const parsedLabel = parseFilename(displayName);
+  return {
+    title: parsedLabel.title,
+    artist: parsedLabel.artist,
+    url: url.trim()
+  };
+}
+
 /* ========== Component ========== */
 export default function AudioConsole() {
   /* ---- Global audio store ---- */
   const {
-    tracks, currentTrack, isPlaying,
-    togglePlay, playTrack, nextTrack, prevTrack, setTracks, setIsPlaying,
+    tracks, currentTrack, isPlaying, togglePlay, setTracks, setIsPlaying,
   } = useAudioStore();
 
   /* ---- Local state ---- */
@@ -287,9 +288,12 @@ export default function AudioConsole() {
       return f;
     });
 
-    // Connect: source → analyserIn → surround → EQ → preamp → compressor → analyserOut → destination
+    // Connect: source → analyserIn → surround → EQ → preamp → compressor → analyserOut
     const source = ctx.createMediaElementSource(audio);
     sourceRef.current = source;
+
+    // PARALLEL OUTPUT PATHS:
+    // Path 1: Processed path → Web Audio graph → ctx.destination (for EQ/surround effects)
     source.connect(aIn);
     aIn.connect(surround);
 
@@ -301,6 +305,12 @@ export default function AudioConsole() {
     prev.connect(pre);
     pre.connect(comp);
     comp.connect(aOut);
+
+    // Path 2: Bypass path → Direct to destination (so music keeps playing when leaving page)
+    // This ensures audio continues even when this component unmounts
+    source.connect(ctx.destination);
+
+    // Also connect processed output so we can see spectrum visualization
     aOut.connect(ctx.destination);
 
     graphReadyRef.current = true;
@@ -375,8 +385,13 @@ export default function AudioConsole() {
 
   useEffect(() => {
     return () => {
-      if (audioCtxRef.current) audioCtxRef.current.close();
+      // Don't close AudioContext - globalAudio needs it to keep playing on other pages
+      // Just nullify the ref so initGraph can detect graph is not ready when returning
+      surroundRef.current = null;
+      sourceRef.current = null;
+      filtersRef.current = [];
       if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
     };
   }, []);
 
@@ -385,22 +400,14 @@ export default function AudioConsole() {
   /* ========== Handlers ========== */
   const loadUrl = useCallback((url: string, label?: string) => {
     if (!url) { setStatusMsg('请输入可访问的音源 URL'); return; }
-    // Parse filename if no label provided
-    const parsedLabel = label || parseFilename(new URL(url).pathname.split('/').pop() || 'Unknown');
-    const newTrack = {
-      title: parsedLabel.title,
-      artist: parsedLabel.artist,
-      url: url.trim(),
-      size: undefined
-    };
-    // Add to playlist and play
+    const newTrack = loadTrackUrl(url, label);
+    // Add to playlist and play at front
     setTracks([newTrack, ...tracks]);
-    setCurrentTrack(0);
+    setIsPlaying(true);
     globalAudio.src = newTrack.url;
     setStatusMsg('正在载入：' + (label || newTrack.title));
     globalAudio.play().catch(() => setPlayerError('播放失败'));
-    setIsPlaying(true);
-  }, [setIsPlaying, tracks, setTracks, setCurrentTrack]);
+  }, [setIsPlaying, tracks, setTracks, globalAudio]);
 
   const loadLocalFile = useCallback((file: File) => {
     if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
@@ -412,14 +419,13 @@ export default function AudioConsole() {
       url: url,
       size: file.size
     };
-    // Add to playlist and play
+    // Add to playlist and play at front
     setTracks([newTrack, ...tracks]);
-    setCurrentTrack(0);
+    setIsPlaying(true);
     setStatusMsg('正在载入：' + file.name);
     globalAudio.src = newTrack.url;
     globalAudio.play().catch(() => setPlayerError('播放失败'));
-    setIsPlaying(true);
-  }, [setIsPlaying, tracks, setTracks, setCurrentTrack]);
+  }, [setIsPlaying, tracks, setTracks, globalAudio]);
   const handleTogglePlay = useCallback(() => {
     // If no track is playing and we have tracks, play currentTrack or first track
     if (!globalAudio.src && tracks.length > 0) {
@@ -435,7 +441,7 @@ export default function AudioConsole() {
     // Otherwise use the store's togglePlay
     if (tracks.length === 0 && !globalAudio.src) return;
     togglePlay();
-  }, [tracks.length, currentTrack, globalAudio.src, togglePlay, setIsPlaying, setStatusMsg]);
+  }, [tracks.length, currentTrack, globalAudio.src, togglePlay, setIsPlaying, setStatusMsg, setTracks]);
 
   const handleNext = useCallback(() => {
     if (tracks.length === 0) return;
@@ -443,10 +449,13 @@ export default function AudioConsole() {
     const url = tracks[next]?.url;
     if (url) {
       globalAudio.src = url;
-      setCurrentTrack(next);
+      // Update playlist to reflect new current track
+      setTracks(tracks);
+      setIsPlaying(true);
+      setStatusMsg('正在播放：' + tracks[next].title);
       globalAudio.play().catch(() => setPlayerError('播放失败'));
     }
-  }, [tracks.length, currentTrack, setCurrentTrack]);
+  }, [tracks.length, currentTrack, tracks, setIsPlaying, setStatusMsg, setTracks]);
 
   const handlePrev = useCallback(() => {
     if (tracks.length === 0) return;
@@ -455,10 +464,13 @@ export default function AudioConsole() {
     if (url) {
       globalAudio.currentTime = 0;
       globalAudio.src = url;
-      setCurrentTrack(prev);
+      // Update playlist to reflect new current track
+      setTracks(tracks);
+      setIsPlaying(true);
+      setStatusMsg('正在播放：' + tracks[prev].title);
       globalAudio.play().catch(() => setPlayerError('播放失败'));
     }
-  }, [tracks.length, currentTrack, setCurrentTrack]);
+  }, [tracks.length, currentTrack, tracks, setIsPlaying, setStatusMsg, setTracks]);
 
   const setBand = useCallback((index: number, patch: Partial<EqBandConfig>) => {
     setEqBands(prev => {
@@ -850,8 +862,7 @@ export default function AudioConsole() {
                     <button key={i} onClick={() => {
                       if (!track.url) return;
                       globalAudio.src = track.url;
-                      setTracks(tracks); // Sync playlist state
-                      setCurrentTrack(i);
+                      // Play the clicked track by updating state
                       setIsPlaying(true);
                       setStatusMsg('正在播放：' + track.title);
                       globalAudio.play().catch(() => setPlayerError('播放失败'));
