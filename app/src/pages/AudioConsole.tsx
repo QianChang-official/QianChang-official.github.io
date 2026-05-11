@@ -180,7 +180,7 @@ function loadTrackUrl(url: string, label?: string): { artist: string; title: str
 export default function AudioConsole() {
   /* ---- Global audio store ---- */
   const {
-    tracks, currentTrack, isPlaying, togglePlay, setTracks, setIsPlaying,
+    tracks, currentTrack, isPlaying, togglePlay, playTrack, setTracks, setIsPlaying,
   } = useAudioStore();
 
   /* ---- Local state ---- */
@@ -244,8 +244,22 @@ export default function AudioConsole() {
     const AC = window.AudioContext || (window as any).webkitAudioContext;
     if (!AC) { setStatusMsg('当前浏览器不支持 Web Audio API'); return; }
 
-    const ctx = new AudioContext();
-    audioCtxRef.current = ctx;
+    // Reuse existing AudioContext if available (user may have left and returned)
+    let ctx = audioCtxRef.current;
+    if (!ctx) {
+      ctx = new AudioContext();
+      audioCtxRef.current = ctx;
+    }
+
+    // Reuse or create MediaElementAudioSourceNode
+    // Note: can only create once per audio element per AudioContext
+    let source = sourceRef.current;
+    if (!source) {
+      source = ctx.createMediaElementSource(audio);
+      sourceRef.current = source;
+      // Bypass path: source → destination ensures audio keeps playing when leaving page
+      source.connect(ctx.destination);
+    }
 
     // Register surround worklet
     try {
@@ -288,12 +302,7 @@ export default function AudioConsole() {
       return f;
     });
 
-    // Connect: source → analyserIn → surround → EQ → preamp → compressor → analyserOut
-    const source = ctx.createMediaElementSource(audio);
-    sourceRef.current = source;
-
-    // PARALLEL OUTPUT PATHS:
-    // Path 1: Processed path → Web Audio graph → ctx.destination (for EQ/surround effects)
+    // Connect processed path: source → analyserIn → surround → EQ → preamp → compressor → analyserOut → destination
     source.connect(aIn);
     aIn.connect(surround);
 
@@ -305,12 +314,6 @@ export default function AudioConsole() {
     prev.connect(pre);
     pre.connect(comp);
     comp.connect(aOut);
-
-    // Path 2: Bypass path → Direct to destination (so music keeps playing when leaving page)
-    // This ensures audio continues even when this component unmounts
-    source.connect(ctx.destination);
-
-    // Also connect processed output so we can see spectrum visualization
     aOut.connect(ctx.destination);
 
     graphReadyRef.current = true;
@@ -383,13 +386,31 @@ export default function AudioConsole() {
     };
   }, [initGraph]);
 
+  // If audio is already playing when mounting (user returned from another page),
+  // init graph immediately so EQ/surround works
+  useEffect(() => {
+    if (!globalAudio.paused && globalAudio.src) {
+      initGraph();
+    }
+  }, [initGraph]);
+
   useEffect(() => {
     return () => {
-      // Don't close AudioContext - globalAudio needs it to keep playing on other pages
-      // Just nullify the ref so initGraph can detect graph is not ready when returning
+      // Detach globalAudio from AudioConsole DOM before React destroys it
+      if (globalAudio.parentElement) {
+        globalAudio.remove();
+        globalAudio.controls = false;
+        globalAudio.className = '';
+        globalAudio.style.display = 'none';
+        document.body.appendChild(globalAudio);
+      }
+      // Don't close AudioContext or nullify sourceRef - we need to reuse them
+      // when user returns to this page so audio keeps playing
       surroundRef.current = null;
-      sourceRef.current = null;
       filtersRef.current = [];
+      analyserInRef.current = null;
+      analyserOutRef.current = null;
+      graphReadyRef.current = false;
       if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
       objectUrlRef.current = null;
     };
@@ -400,77 +421,53 @@ export default function AudioConsole() {
   /* ========== Handlers ========== */
   const loadUrl = useCallback((url: string, label?: string) => {
     if (!url) { setStatusMsg('请输入可访问的音源 URL'); return; }
-    const newTrack = loadTrackUrl(url, label);
-    // Add to playlist and play at front
-    setTracks([newTrack, ...tracks]);
+    const name = label || new URL(url).pathname.split('/').pop() || 'Unknown';
+    const { artist, title } = parseFilename(name);
+    const newTrack = { title, artist, url: url.trim() };
+    const newTracks = [newTrack, ...tracks];
+    setTracks(newTracks);
     setIsPlaying(true);
+    setStatusMsg('正在载入：' + title);
     globalAudio.src = newTrack.url;
-    setStatusMsg('正在载入：' + (label || newTrack.title));
     globalAudio.play().catch(() => setPlayerError('播放失败'));
-  }, [setIsPlaying, tracks, setTracks, globalAudio]);
+  }, [tracks, setTracks, setIsPlaying]);
 
   const loadLocalFile = useCallback((file: File) => {
     if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
     const url = URL.createObjectURL(file); objectUrlRef.current = url;
-    const parsedLabel = parseFilename(file.name);
-    const newTrack = {
-      title: parsedLabel.title,
-      artist: parsedLabel.artist,
-      url: url,
-      size: file.size
-    };
-    // Add to playlist and play at front
-    setTracks([newTrack, ...tracks]);
+    const { artist, title } = parseFilename(file.name);
+    const newTrack = { title, artist, url, size: file.size };
+    const newTracks = [newTrack, ...tracks];
+    setTracks(newTracks);
     setIsPlaying(true);
     setStatusMsg('正在载入：' + file.name);
     globalAudio.src = newTrack.url;
     globalAudio.play().catch(() => setPlayerError('播放失败'));
-  }, [setIsPlaying, tracks, setTracks, globalAudio]);
+  }, [tracks, setTracks, setIsPlaying]);
+
   const handleTogglePlay = useCallback(() => {
-    // If no track is playing and we have tracks, play currentTrack or first track
     if (!globalAudio.src && tracks.length > 0) {
-      const url = tracks[currentTrack]?.url;
-      if (url) {
-        globalAudio.src = url;
-        setIsPlaying(true);
-        setStatusMsg('正在播放：' + tracks[currentTrack].title);
-        globalAudio.play().catch(() => setPlayerError('播放失败'));
-        return;
-      }
+      playTrack(currentTrack);
+      setStatusMsg('正在播放：' + tracks[currentTrack]?.title);
+      return;
     }
-    // Otherwise use the store's togglePlay
     if (tracks.length === 0 && !globalAudio.src) return;
     togglePlay();
-  }, [tracks.length, currentTrack, globalAudio.src, togglePlay, setIsPlaying, setStatusMsg, setTracks]);
+  }, [tracks, currentTrack, togglePlay, playTrack]);
 
   const handleNext = useCallback(() => {
     if (tracks.length === 0) return;
     const next = (currentTrack + 1) % tracks.length;
-    const url = tracks[next]?.url;
-    if (url) {
-      globalAudio.src = url;
-      // Update playlist to reflect new current track
-      setTracks(tracks);
-      setIsPlaying(true);
-      setStatusMsg('正在播放：' + tracks[next].title);
-      globalAudio.play().catch(() => setPlayerError('播放失败'));
-    }
-  }, [tracks.length, currentTrack, tracks, setIsPlaying, setStatusMsg, setTracks]);
+    playTrack(next);
+    setStatusMsg('正在播放：' + tracks[next]?.title);
+  }, [tracks, currentTrack, playTrack]);
 
   const handlePrev = useCallback(() => {
     if (tracks.length === 0) return;
     const prev = (currentTrack - 1 + tracks.length) % tracks.length;
-    const url = tracks[prev]?.url;
-    if (url) {
-      globalAudio.currentTime = 0;
-      globalAudio.src = url;
-      // Update playlist to reflect new current track
-      setTracks(tracks);
-      setIsPlaying(true);
-      setStatusMsg('正在播放：' + tracks[prev].title);
-      globalAudio.play().catch(() => setPlayerError('播放失败'));
-    }
-  }, [tracks.length, currentTrack, tracks, setIsPlaying, setStatusMsg, setTracks]);
+    playTrack(prev);
+    setStatusMsg('正在播放：' + tracks[prev]?.title);
+  }, [tracks, currentTrack, playTrack]);
 
   const setBand = useCallback((index: number, patch: Partial<EqBandConfig>) => {
     setEqBands(prev => {
