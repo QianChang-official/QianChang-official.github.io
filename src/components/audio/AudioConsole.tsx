@@ -610,8 +610,10 @@ export default function AudioConsole() {
               </div>
               <button
                 type="button"
+                disabled={engine.ready && !engine.surroundAvailable}
+                title={engine.ready && !engine.surroundAvailable ? '当前浏览器不支持 AudioWorklet，环绕处理不可用' : undefined}
                 onClick={() => engine.toggleSurroundState(!engine.surroundEnabled)}
-                className={`rounded-lg px-4 py-2 font-medium text-sm transition-all ${engine.surroundEnabled ? 'bg-primary text-primary-foreground' : 'border border-border text-muted-foreground hover:bg-muted/60'}`}
+                className={`rounded-lg px-4 py-2 font-medium text-sm transition-all disabled:cursor-not-allowed disabled:opacity-40 ${engine.surroundEnabled ? 'bg-primary text-primary-foreground' : 'border border-border text-muted-foreground hover:bg-muted/60'}`}
               >
                 {engine.surroundEnabled ? '已启用' : '已关闭'}
               </button>

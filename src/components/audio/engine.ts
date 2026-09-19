@@ -128,10 +128,15 @@ const SURROUND_WORKLET = `
 class DifferentialSurroundProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
-    this.delayBuf = new Float32Array(48000);
+    this.maxDelay = Math.floor(sampleRate * 0.06) + 2; // 60ms headroom over the 50ms param cap
+    this.delayBuf = new Float32Array(this.maxDelay);
     this.delayWrite = 0;
     this.lpX1=0;this.lpX2=0;this.lpY1=0;this.lpY2=0;
     this.hpX1=0;this.hpX2=0;this.hpY1=0;this.hpY2=0;
+    this.lastLp=-1;this.lastHp=-1;
+    this.lpC=null;this.hpC=null;
+    this.curDelay=0;  // smoothed fractional delay, in samples
+    this.bypassMix=1; // 1 = fully bypassed; crossfades to avoid clicks
   }
   static get parameterDescriptors() {
     return [
@@ -170,30 +175,57 @@ class DifferentialSurroundProcessor extends AudioWorkletProcessor {
     const lpF=parameters.lpFreq[0], hpF=parameters.hpFreq[0];
     const eqG=Math.pow(10, parameters.eqGain[0]/20);
     const dlyMs=parameters.delayTime[0], sGain=parameters.surroundGain[0];
-    const outG=parameters.outputGain[0], bypass=parameters.bypass[0]>0.5;
-    const dlySamples=Math.max(0, Math.floor(dlyMs*sampleRate/1000));
-    const lpC=this.calcLPF(lpF, sampleRate), hpC=this.calcHPF(hpF, sampleRate);
+    const outG=parameters.outputGain[0];
+    const bypassTarget=parameters.bypass[0]>0.5?1:0;
+
+    // Recompute filter coefficients only when a cutoff actually changed —
+    // allocating them every render quantum GC-churns the audio thread (crackle).
+    if(lpF!==this.lastLp){ this.lpC=this.calcLPF(lpF,sampleRate); this.lastLp=lpF; }
+    if(hpF!==this.lastHp){ this.hpC=this.calcHPF(hpF,sampleRate); this.lastHp=hpF; }
+    const lpC=this.lpC, hpC=this.hpC;
+
+    const targetDelay=Math.min(this.maxDelay-2, Math.max(0, dlyMs*sampleRate/1000));
+    const buf=this.delayBuf, len=buf.length;
+    let w=this.delayWrite;
+    let lpX1=this.lpX1,lpX2=this.lpX2,lpY1=this.lpY1,lpY2=this.lpY2;
+    let hpX1=this.hpX1,hpX2=this.hpX2,hpY1=this.hpY1,hpY2=this.hpY2;
+    let curDelay=this.curDelay, bypassMix=this.bypassMix;
 
     for(let i=0;i<L.length;i++){
       const l=L[i], r=R[i];
-      if(bypass){ OL[i]=l*outG; OR[i]=r*outG; continue; }
+      // ~4ms one-pole smoothing: delay glide and bypass toggle stay click-free
+      curDelay+=(targetDelay-curDelay)*0.01;
+      bypassMix+=(bypassTarget-bypassMix)*0.01;
+
       const C=(l+r)*0.5*cGain, S=(l-r)*0.5*sWidth;
 
-      const hy=hpC.b0*S+hpC.b1*this.hpX1+hpC.b2*this.hpX2-hpC.a1*this.hpY1-hpC.a2*this.hpY2;
-      this.hpX2=this.hpX1; this.hpX1=S; this.hpY2=this.hpY1; this.hpY1=hy;
+      const hy=hpC.b0*S+hpC.b1*hpX1+hpC.b2*hpX2-hpC.a1*hpY1-hpC.a2*hpY2;
+      hpX2=hpX1;hpX1=S;hpY2=hpY1;hpY1=hy;
 
-      const ly_=lpC.b0*hy+lpC.b1*this.lpX1+lpC.b2*this.lpX2-lpC.a1*this.lpY1-lpC.a2*this.lpY2;
-      this.lpX2=this.lpX1; this.lpX1=hy; this.lpY2=this.lpY1; this.lpY1=ly_;
+      const ly_=lpC.b0*hy+lpC.b1*lpX1+lpC.b2*lpX2-lpC.a1*lpY1-lpC.a2*lpY2;
+      lpX2=lpX1;lpX1=hy;lpY2=lpY1;lpY1=ly_;
 
       const filteredS=ly_*eqG;
-      const readIdx=(this.delayWrite-dlySamples+this.delayBuf.length)%this.delayBuf.length;
-      const delayedS=dlySamples>0?this.delayBuf[readIdx]:filteredS;
-      this.delayBuf[this.delayWrite]=filteredS;
-      this.delayWrite=(this.delayWrite+1)%this.delayBuf.length;
+
+      // Write first, then read curDelay samples back with linear interpolation
+      buf[w]=filteredS;
+      const rp=w-curDelay;
+      const i0=Math.floor(rp), frac=rp-i0;
+      const older=buf[((i0%len)+len)%len];
+      const newer=buf[(((i0+1)%len)+len)%len];
+      const delayedS=older*(1-frac)+newer*frac;
+      w=(w+1)%len;
 
       const wet=delayedS*sGain;
-      OL[i]=(C+wet)*outG; OR[i]=(C-wet)*outG;
+      const bm=bypassMix;
+      OL[i]=(l*bm+(C+wet)*(1-bm))*outG;
+      OR[i]=(r*bm+(C-wet)*(1-bm))*outG;
     }
+
+    this.delayWrite=w;
+    this.lpX1=lpX1;this.lpX2=lpX2;this.lpY1=lpY1;this.lpY2=lpY2;
+    this.hpX1=hpX1;this.hpX2=hpX2;this.hpY1=hpY1;this.hpY2=hpY2;
+    this.curDelay=curDelay;this.bypassMix=bypassMix;
     return true;
   }
 }
@@ -203,7 +235,8 @@ registerProcessor('differential-surround', DifferentialSurroundProcessor);
 /* ========== Engine State ========== */
 let ctx: AudioContext | null = null;
 let sourceNode: MediaElementAudioSourceNode | null = null;
-let surroundNode: AudioWorkletNode | null = null;
+let surroundNode: AudioWorkletNode | GainNode | null = null;
+let surroundAvailable = false;
 let filters: BiquadFilterNode[] = [];
 let preampNode: GainNode | null = null;
 let compressorNode: DynamicsCompressorNode | null = null;
@@ -228,18 +261,23 @@ export async function initAudioEngine(): Promise<void> {
 
     ctx = new AC();
 
-    // Register surround worklet
+    // Register surround worklet; fall back to a transparent GainNode when
+    // AudioWorklet is unavailable so EQ/preamp keep working either way.
     try {
       const blob = new Blob([SURROUND_WORKLET], { type: 'application/javascript' });
       const url = URL.createObjectURL(blob);
-      await ctx.audioWorklet.addModule(url);
+      try {
+        await ctx.audioWorklet.addModule(url);
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+      surroundNode = new AudioWorkletNode(ctx, 'differential-surround', { outputChannelCount: [2] });
+      surroundNode.parameters.get('bypass')?.setValueAtTime(1, ctx.currentTime);
+      surroundAvailable = true;
     } catch {
-      // Worklet failed — surround will be unavailable
+      surroundNode = ctx.createGain();
+      surroundAvailable = false;
     }
-
-    // Create nodes
-    surroundNode = new AudioWorkletNode(ctx, 'differential-surround', { outputChannelCount: [2] });
-    surroundNode.parameters.get('bypass')?.setValueAtTime(1, ctx.currentTime);
 
     analyserIn = ctx.createAnalyser();
     analyserIn.fftSize = 2048;
@@ -288,19 +326,27 @@ export async function initAudioEngine(): Promise<void> {
     initialized = true;
   })();
 
+  // If init failed (e.g. AudioContext blocked), allow a later retry instead
+  // of caching the rejection forever.
+  initPromise.catch(() => {
+    initPromise = null;
+  });
+
   return initPromise;
 }
 
 /* ========== Source Connection ========== */
-/* Call this once when you want to start processing audio */
+/* Call this once when you want to start processing audio.
+   The media element is routed exclusively through the processing chain —
+   do NOT also connect it to the destination: a parallel dry path sums with
+   the processed signal, overshoots full scale (clipping crackle) and
+   comb-filters against the EQ/surround phase response. */
 export function connectAudioSource(): void {
   if (!ctx || !analyserIn) return;
   if (sourceNode) return; // Already connected
 
   sourceNode = ctx.createMediaElementSource(globalAudio);
   sourceNode.connect(analyserIn);
-  // Also connect bypass so audio plays even if engine not fully wired
-  sourceNode.connect(ctx.destination);
 }
 
 /* ========== EQ Control ========== */
@@ -366,19 +412,23 @@ export function setLimiter(enabled: boolean): void {
 }
 
 /* ========== Surround Control ========== */
+function setSurroundAudioParam(name: string, value: number): void {
+  if (!surroundAvailable || !surroundNode || !ctx) return;
+  (surroundNode as AudioWorkletNode).parameters.get(name)?.setValueAtTime(value, ctx.currentTime);
+}
+
 function applySurroundParams(): void {
-  if (!surroundNode || !ctx) return;
+  if (!surroundAvailable || !surroundNode || !ctx) return;
   const s = currentSurroundParams;
-  const t = ctx.currentTime;
-  surroundNode.parameters.get('centerGain')?.setValueAtTime(s.centerGain, t);
-  surroundNode.parameters.get('surroundWidth')?.setValueAtTime(s.surroundWidth, t);
-  surroundNode.parameters.get('lpFreq')?.setValueAtTime(s.lpFreq, t);
-  surroundNode.parameters.get('hpFreq')?.setValueAtTime(s.hpFreq, t);
-  surroundNode.parameters.get('eqGain')?.setValueAtTime(s.eqGain, t);
-  surroundNode.parameters.get('delayTime')?.setValueAtTime(s.delayTime, t);
-  surroundNode.parameters.get('surroundGain')?.setValueAtTime(s.surroundGain, t);
-  surroundNode.parameters.get('outputGain')?.setValueAtTime(s.outputGain, t);
-  surroundNode.parameters.get('bypass')?.setValueAtTime(currentSurroundEnabled ? 0 : 1, t);
+  setSurroundAudioParam('centerGain', s.centerGain);
+  setSurroundAudioParam('surroundWidth', s.surroundWidth);
+  setSurroundAudioParam('lpFreq', s.lpFreq);
+  setSurroundAudioParam('hpFreq', s.hpFreq);
+  setSurroundAudioParam('eqGain', s.eqGain);
+  setSurroundAudioParam('delayTime', s.delayTime);
+  setSurroundAudioParam('surroundGain', s.surroundGain);
+  setSurroundAudioParam('outputGain', s.outputGain);
+  setSurroundAudioParam('bypass', currentSurroundEnabled ? 0 : 1);
 }
 
 export function setSurroundParam(key: keyof SurroundParams, value: number): void {
@@ -402,6 +452,10 @@ export function getSurroundParams(): SurroundParams {
 
 export function isSurroundEnabled(): boolean {
   return currentSurroundEnabled;
+}
+
+export function isSurroundAvailable(): boolean {
+  return surroundAvailable;
 }
 
 /* ========== Spectrum ========== */

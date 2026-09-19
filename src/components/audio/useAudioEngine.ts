@@ -12,6 +12,7 @@ import {
   getSurroundParams,
   initAudioEngine,
   isEngineReady,
+  isSurroundAvailable,
   isSurroundEnabled,
   resetEq,
   resumeContext,
@@ -30,6 +31,7 @@ export function useAudioEngine() {
   const [preamp, setPreampState] = useState(-1);
   const [limiterOn, setLimiterOnState] = useState(true);
   const [surroundEnabled, setSurroundEnabledState] = useState(isSurroundEnabled());
+  const [surroundAvailable, setSurroundAvailable] = useState(isSurroundAvailable());
   const [surroundParams, setSurroundParamsState] = useState<SurroundParams>(getSurroundParams());
   const [status, setStatus] = useState('');
   const animFrameRef = useRef<number>(0);
@@ -39,6 +41,7 @@ export function useAudioEngine() {
     initAudioEngine()
       .then(() => {
         setReady(true);
+        setSurroundAvailable(isSurroundAvailable());
         setStatus('音频引擎已就绪');
       })
       .catch(() => {
@@ -118,6 +121,7 @@ export function useAudioEngine() {
     preamp,
     limiterOn,
     surroundEnabled,
+    surroundAvailable,
     surroundParams,
     updateEqBand,
     applyPreset,

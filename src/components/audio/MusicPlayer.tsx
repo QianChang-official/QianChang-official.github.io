@@ -119,6 +119,13 @@ function formatSize(bytes: number) {
   return size.toFixed(unit ? 1 : 0) + ' ' + units[unit];
 }
 
+function formatTime(sec: number) {
+  if (!Number.isFinite(sec) || sec < 0) return '0:00';
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 function getStored(key: string, fallback = '') {
   try {
     const v = localStorage.getItem(key);
@@ -127,6 +134,24 @@ function getStored(key: string, fallback = '') {
     return fallback;
   }
 }
+
+const SURROUND_CONTROLS: {
+  key: keyof SurroundParams;
+  label: string;
+  min: number;
+  max: number;
+  step: number;
+  unit?: 'Hz' | 'dB' | 'ms';
+}[] = [
+  { key: 'centerGain', label: 'Center', min: 0, max: 2, step: 0.01 },
+  { key: 'surroundWidth', label: '宽度', min: 0, max: 2, step: 0.01 },
+  { key: 'hpFreq', label: '高通', min: 20, max: 1000, step: 10, unit: 'Hz' },
+  { key: 'lpFreq', label: '低通', min: 1000, max: 16000, step: 100, unit: 'Hz' },
+  { key: 'eqGain', label: 'EQ增益', min: -12, max: 12, step: 0.5, unit: 'dB' },
+  { key: 'delayTime', label: '延迟', min: 0, max: 50, step: 0.5, unit: 'ms' },
+  { key: 'surroundGain', label: '环绕增益', min: 0, max: 2, step: 0.01 },
+  { key: 'outputGain', label: '总增益', min: 0, max: 2, step: 0.01 },
+];
 
 /* ========== Component ========== */
 export default function MusicPlayer() {
@@ -144,6 +169,8 @@ export default function MusicPlayer() {
   const [playMode, setPlayMode] = useState<PlayMode>('sequential');
   const [playedRandomIndices, setPlayedRandomIndices] = useState<number[]>([]);
   const [activeTab, setActiveTab] = useState<Tab>('playlist');
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   /* ---- R2 State ---- */
   const [workerApi, setWorkerApi] = useState(getStored('qcAudioApiBase', DEFAULT_WORKER));
@@ -199,13 +226,34 @@ export default function MusicPlayer() {
     return () => globalAudio.removeEventListener('error', onError);
   }, []);
 
-  /* ---- Spectrum animation ---- */
+  /* ---- Progress tracking (bound to the shared element — never a second download) ---- */
   useEffect(() => {
-    if (!expanded || activeTab !== 'spectrum') return;
+    const onTime = () => {
+      setCurrentTime(globalAudio.currentTime);
+      setDuration(Number.isFinite(globalAudio.duration) ? globalAudio.duration : 0);
+    };
+    globalAudio.addEventListener('timeupdate', onTime);
+    globalAudio.addEventListener('durationchange', onTime);
+    globalAudio.addEventListener('loadedmetadata', onTime);
+    globalAudio.addEventListener('seeked', onTime);
+    onTime();
+    return () => {
+      globalAudio.removeEventListener('timeupdate', onTime);
+      globalAudio.removeEventListener('durationchange', onTime);
+      globalAudio.removeEventListener('loadedmetadata', onTime);
+      globalAudio.removeEventListener('seeked', onTime);
+    };
+  }, []);
+
+  /* ---- Spectrum / response-curve animation ---- */
+  useEffect(() => {
+    if (!expanded || (activeTab !== 'spectrum' && activeTab !== 'eq')) return;
     const draw = () => {
-      const { input, output } = getSpectrumData();
-      drawSpectrum(spectrumInRef.current, input, ['#ed6ea0', '#e91e63']);
-      drawSpectrum(spectrumOutRef.current, output, ['#57b5f2', '#2b7fd4']);
+      if (activeTab === 'spectrum') {
+        const { input, output } = getSpectrumData();
+        drawSpectrum(spectrumInRef.current, input, ['#ed6ea0', '#e91e63']);
+        drawSpectrum(spectrumOutRef.current, output, ['#57b5f2', '#2b7fd4']);
+      }
       if (activeTab === 'eq') drawResponseCurve(responseRef.current, getFilters());
       animFrameRef.current = requestAnimationFrame(draw);
     };
@@ -455,18 +503,24 @@ export default function MusicPlayer() {
                 </button>
               </div>
 
-              {/* Native controls for progress */}
-              {/* biome-ignore lint/a11y/useMediaCaption: display-only native progress bar bound to the shared audio element */}
-              <audio
-                ref={(el) => {
-                  if (el && globalAudio !== el) {
-                    // This is just for display - globalAudio is the actual player
-                  }
-                }}
-                src={globalAudio.src}
-                className="mb-2 h-8 w-full"
-                controls
-              />
+              {/* Seek bar bound to the shared audio element (renders progress without a second stream) */}
+              <div className="mb-2 flex items-center gap-2 text-muted-foreground text-xs">
+                <span className="w-9 text-right font-mono">{formatTime(currentTime)}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={duration || 0}
+                  step={0.1}
+                  value={Math.min(currentTime, duration || 0)}
+                  onChange={(e) => {
+                    globalAudio.currentTime = Number(e.target.value);
+                  }}
+                  aria-label="播放进度"
+                  className="h-8 flex-1"
+                  style={{ accentColor: 'hsl(var(--primary))' }}
+                />
+                <span className="w-9 font-mono">{formatTime(duration)}</span>
+              </div>
             </div>
 
             {/* Tabs */}
@@ -740,18 +794,7 @@ export default function MusicPlayer() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    {(
-                      [
-                        { key: 'centerGain', label: 'Center', min: 0, max: 2, step: 0.01 },
-                        { key: 'surroundWidth', label: '宽度', min: 0, max: 2, step: 0.01 },
-                        { key: 'hpFreq', label: '高通', min: 20, max: 1000, step: 10, unit: 'Hz' },
-                        { key: 'lpFreq', label: '低通', min: 1000, max: 16000, step: 100, unit: 'Hz' },
-                        { key: 'eqGain', label: 'EQ增益', min: -12, max: 12, step: 0.5, unit: 'dB' },
-                        { key: 'delayTime', label: '延迟', min: 0, max: 50, step: 0.5, unit: 'ms' },
-                        { key: 'surroundGain', label: '环绕增益', min: 0, max: 2, step: 0.01 },
-                        { key: 'outputGain', label: '总增益', min: 0, max: 2, step: 0.01 },
-                      ] as const
-                    ).map((p) => (
+                    {SURROUND_CONTROLS.map((p) => (
                       <div key={p.key} className="rounded-lg border border-border/40 bg-muted/30 p-2 text-xs">
                         <div className="mb-1 flex justify-between">
                           <span className="text-muted-foreground">{p.label}</span>
