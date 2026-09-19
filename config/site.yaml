@@ -1,0 +1,267 @@
+# yaml-language-server: $schema=https://json-schema.org/draft-07/schema
+# =============================================================================
+# Site Configuration — 落赋韶华 (qianchanglys.top)
+# 基于主题 astro-koharu (AGPL-3.0) 定制
+# =============================================================================
+
+# =============================================================================
+# Site Basic Information
+# =============================================================================
+site:
+  title: 落赋韶华 # 网站名称
+  alternate: '' # 网站英文名称 用于页脚、Logo、@ handle 等（留空则页脚只显示作者名，Logo 显示站名）
+  subtitle: AI/理工科 · 开源折腾爱好者 # 网站副标题
+  name: 浅唱ヾ落雨殇 # 作者名称
+  description: 落赋韶华 —— 浅唱ヾ落雨殇的个人站点：AI / 理工科 / 开源折腾 # 网站描述
+  # avatar: 不使用头像图片
+  showLogo: false # 不使用模板 SVG Logo，Header 显示 alternate 文字标（Bear Days 字体）
+  author: 浅唱ヾ落雨殇 # 作者名称
+  url: https://qianchanglys.top # 站点 URL 用于 RSS 和 SEO
+  defaultOgImage: /img/site_header_1920.webp # 默认 Open Graph 图片
+  startYear: 2025 # 建站年份
+  timezone: Asia/Shanghai # 时区配置 (IANA 格式)
+  keywords: # SEO 关键词 (全局)
+    - 落赋韶华
+    - 浅唱ヾ落雨殇
+    - 博客
+    - AI
+    - 前端
+    - 量子计算
+    - 音频
+
+# =============================================================================
+# Internationalization (i18n)
+# 仅启用中文，其余语言禁用（不生成路由）
+# =============================================================================
+i18n:
+  defaultLocale: zh
+  locales:
+    - code: zh
+      label: 中文
+    - code: en
+      label: English
+      enabled: false
+    - code: ja
+      label: 日本語
+      enabled: false
+    - code: ko
+      label: 한국어
+      enabled: false
+
+# =============================================================================
+# Category Map
+# Maps Chinese category names to URL-friendly English slugs
+# =============================================================================
+categoryMap:
+  技术架构: architecture
+  前端开发: front-end
+  人工智能: ai
+  生活随笔: life
+  摄影艺术: photography
+  周刊: weekly
+
+# =============================================================================
+# Featured Categories (Homepage)
+# 首页精选分类 - 暂无原创文章，发布文章后按需启用
+# =============================================================================
+featuredCategories: []
+
+# =============================================================================
+# Featured Series
+# =============================================================================
+featuredSeries:
+  - slug: weekly
+    categoryName: 周刊
+    label: 周刊
+    fullName: 周刊
+    description: 系列内容（当前未启用）
+    cover: /img/weekly_header.webp
+    enabled: false
+    icon: ri:newspaper-line
+
+# =============================================================================
+# Social Links
+# =============================================================================
+social:
+  github:
+    url: https://github.com/QianChang-official
+    icon: ri:github-fill
+    color: '#191717'
+  email:
+    url: mailto:qianchanglys@gmail.com
+    icon: ri:mail-line
+    color: '#55acd5'
+  rss:
+    url: /rss.xml
+    icon: ri:rss-line
+    color: '#ff6600'
+
+# =============================================================================
+# Friends Links
+# =============================================================================
+friends:
+  intro:
+    title: 友情链接
+    subtitle: 欢迎交换友链！
+    applyTitle: 申请友链
+    applyDesc: 请在本页留言，格式如下
+    exampleYaml: |
+      - site: 你的博客名称 # 站点名称
+        url: https://your-blog.com/ # 站点网址
+        owner: 你的昵称 # 昵称
+        desc: 站点简介 # 站点简介
+        image: https://your-blog.com/avatar.jpg # 头像链接
+        color: "#ffc0cb" # 主题色（可选）
+  data:
+    - site: 掘金技术社区
+      url: https://juejin.cn
+      owner: 掘金
+      desc: 开发者的技术家园
+      image: https://juejin.cn/favicon.ico
+      color: '#1E80FF'
+    - site: 知乎
+      url: https://www.zhihu.com
+      owner: 知乎
+      desc: 有问题，就会有答案
+      image: https://static.zhihu.com/heifetz/favicon.ico
+      color: '#0084FF'
+    - site: GitHub
+      url: https://github.com
+      owner: GitHub
+      desc: Where the world builds software
+      image: https://github.com/favicon.ico
+      color: '#191717'
+    - site: V2EX
+      url: https://www.v2ex.com
+      owner: V2EX
+      desc: 创意工作者们的社区
+      image: https://www.v2ex.com/favicon.ico
+      color: '#778087'
+
+# =============================================================================
+# Announcements
+# =============================================================================
+announcements: []
+
+# =============================================================================
+# Default Cover List
+# =============================================================================
+# defaultCoverList:
+#   - /img/cover/1.webp
+
+# =============================================================================
+# Content Processing Options
+# =============================================================================
+content:
+  addBlankTarget: true
+  smoothScroll: true
+  addHeadingLevel: true
+  enhanceCodeBlock: true
+  enableCodeCopy: true
+  enableCodeFullscreen: true
+  enableLinkEmbed: true
+  enableCodePenEmbed: true
+  enableTweetEmbed: true
+  enableOGPreview: true
+  previewCacheTime: 30
+  lazyLoadEmbeds: true
+  postCardImagePosition: alternating
+  enableShokaContainers: true
+  enableShokaAttrs: true
+  enableShokaEffects: true
+  enableShokaSpoiler: true
+  enableShokaRuby: true
+  enableShokaHexoTags: true
+  enableMath: true
+  enableCodeMeta: true
+  enableQuiz: true
+  enableEncryptedBlock: true
+
+# =============================================================================
+# Moments Archive (optional)
+# =============================================================================
+moments:
+  enabled: false
+
+# =============================================================================
+# Navigation Routes
+# =============================================================================
+navigation:
+  - name: 首页
+    nameKey: nav.home
+    path: /
+    icon: ri:home-heart-fill
+  - name: 文章
+    nameKey: nav.posts
+    icon: ri:quill-pen-ai-fill
+    children:
+      - name: 分类
+        nameKey: nav.categories
+        path: /categories
+        icon: ri:grid-fill
+      - name: 标签
+        nameKey: nav.tags
+        path: /tags
+        icon: fa6-solid:tags
+      - name: 归档
+        nameKey: nav.archives
+        path: /archives
+        icon: ri:archive-2-fill
+  - name: 音源
+    path: /audio
+    icon: ri:music-2-fill
+  - name: 友链
+    nameKey: nav.friends
+    path: /friends
+    icon: ri:links-line
+  - name: 关于
+    nameKey: nav.about
+    path: /about
+    icon: fa6-regular:circle-user
+
+# =============================================================================
+# Comment System
+# =============================================================================
+comment:
+  provider: none
+
+# =============================================================================
+# Analytics (Umami)
+# =============================================================================
+analytics:
+  umami:
+    enabled: false
+
+# =============================================================================
+# SEO Configuration
+# =============================================================================
+seo:
+  robots: {}
+
+# =============================================================================
+# BGM Player — 已禁用，站点使用自研 R2 音源控制台（/audio + 全局悬浮播放器）
+# =============================================================================
+bgm:
+  enabled: false
+
+# =============================================================================
+# Christmas/Seasonal Features
+# =============================================================================
+christmas:
+  enabled: false
+
+# =============================================================================
+# Bangumi — 未启用
+# =============================================================================
+
+# =============================================================================
+# Development Tools (Dev Only)
+# =============================================================================
+dev:
+  localProjectPath: 'C:/Users/Administrator/Documents/VScode-Workspace/Github主页/QianChang-official.github.io'
+  contentRelativePath: 'src/content/blog'
+  editors:
+    - id: vscode
+      name: VS Code
+      icon: devicon-plain:vscode
+      urlTemplate: 'vscode://file/{path}'

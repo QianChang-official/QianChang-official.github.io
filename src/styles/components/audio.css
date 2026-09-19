@@ -1,0 +1,12 @@
+/* ========== R2 Audio Workspace (音源控制台) ========== */
+/* Spectrum / response canvases use a fixed dark surface so the
+   bars stay readable in both light and dark themes. */
+.audio-canvas {
+  display: block;
+  width: 100%;
+  background-color: #21252b;
+}
+
+.dark .audio-canvas {
+  background-color: #1a1d24;
+}
