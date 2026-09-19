@@ -38,3 +38,4 @@ pnpm-debug.log*
 # Backup files
 backups/
 .mimosa/
+preview.log
