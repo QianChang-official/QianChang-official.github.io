@@ -259,7 +259,12 @@ export async function initAudioEngine(): Promise<void> {
     const AC = window.AudioContext || (window as any).webkitAudioContext;
     if (!AC) throw new Error('Web Audio API not supported');
 
-    ctx = new AC();
+    // 'interactive' = 最小输出缓冲，压低从解码到声卡的末段延迟
+    ctx = new AC({ latencyHint: 'interactive' });
+
+    // 在首个手势（pointerdown）就唤醒 AudioContext，而不是等 play 事件冒泡上来，
+    // 用户点播放时上下文已在运行，省掉 resume 的一段启动延迟
+    window.addEventListener('pointerdown', resumeContext, { capture: true, passive: true });
 
     // Register surround worklet; fall back to a transparent GainNode when
     // AudioWorklet is unavailable so EQ/preamp keep working either way.

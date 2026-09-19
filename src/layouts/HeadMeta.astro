@@ -36,6 +36,10 @@ const hreflangLinks = showLocaleAlternates
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+{/* 音源链路预热：提前建立到 R2 公共域 / Worker 的 TLS 连接（crossorigin 与媒体元素的 CORS 连接池匹配），首次播放少一次握手 */}
+<link rel="preconnect" href="https://pub-ae8ff9e688d7481da1eab0ed3dd2a2fd.r2.dev" crossorigin />
+<link rel="dns-prefetch" href="https://pub-ae8ff9e688d7481da1eab0ed3dd2a2fd.r2.dev" />
+<link rel="preconnect" href="https://qianchang-r2-audio.3174837085.workers.dev" crossorigin />
 <meta name="generator" content={Astro.generator} />
 {/* Async load rounded fonts — Japanese pages use Gen Jyuu Gothic P, others use ChillRoundF (fix #113) */}
 {locale === 'ja' ? (

@@ -15,6 +15,7 @@ import {
   SkipForward,
   Upload,
   Volume2,
+  VolumeX,
   Waves,
   X,
 } from 'lucide-react';
@@ -171,6 +172,7 @@ export default function MusicPlayer() {
   const [activeTab, setActiveTab] = useState<Tab>('playlist');
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(globalAudio.volume);
 
   /* ---- R2 State ---- */
   const [workerApi, setWorkerApi] = useState(getStored('qcAudioApiBase', DEFAULT_WORKER));
@@ -236,12 +238,15 @@ export default function MusicPlayer() {
     globalAudio.addEventListener('durationchange', onTime);
     globalAudio.addEventListener('loadedmetadata', onTime);
     globalAudio.addEventListener('seeked', onTime);
+    const onVolume = () => setVolume(globalAudio.muted ? 0 : globalAudio.volume);
+    globalAudio.addEventListener('volumechange', onVolume);
     onTime();
     return () => {
       globalAudio.removeEventListener('timeupdate', onTime);
       globalAudio.removeEventListener('durationchange', onTime);
       globalAudio.removeEventListener('loadedmetadata', onTime);
       globalAudio.removeEventListener('seeked', onTime);
+      globalAudio.removeEventListener('volumechange', onVolume);
     };
   }, []);
 
@@ -501,6 +506,38 @@ export default function MusicPlayer() {
                 >
                   <ModeIcon className="h-3 w-3" /> {MODE_LABELS[playMode]}
                 </button>
+              </div>
+
+              {/* Volume — bound to the shared element, stays in sync with native controls elsewhere */}
+              <div className="mb-2 flex items-center gap-2 text-muted-foreground">
+                <button
+                  type="button"
+                  onClick={() => {
+                    globalAudio.muted = !globalAudio.muted;
+                    setVolume(globalAudio.muted ? 0 : globalAudio.volume);
+                  }}
+                  aria-label="静音切换"
+                  className="p-1 hover:text-primary"
+                >
+                  {volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                </button>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={volume}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    globalAudio.muted = false;
+                    globalAudio.volume = v;
+                    setVolume(v);
+                  }}
+                  aria-label="音量"
+                  className="h-4 flex-1"
+                  style={{ accentColor: 'hsl(var(--primary))' }}
+                />
+                <span className="w-8 text-right font-mono text-xs">{Math.round(volume * 100)}</span>
               </div>
 
               {/* Seek bar bound to the shared audio element (renders progress without a second stream) */}
