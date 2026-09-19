@@ -1,0 +1,24 @@
+---
+import DifferentialSurround from '@components/audio/DifferentialSurround';
+import HomeSider from '@components/layout/HomeSider.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import { CONTENT_PADDING } from '@constants/layout';
+import { siteConfig } from '@constants/site-config';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+
+const title = `环绕声实验室 | ${siteConfig.title}`;
+const description = '差分环绕声实验室：基于 Web Audio API + AudioWorklet 的虚拟环绕声调试台，支持文件、麦克风与演示信号源。';
+---
+
+<Layout title={title} description={description}>
+  <TwoColumnLayout showPostFooter={false}>
+    <Cover slot="cover" title="环绕声实验室" compact />
+    <HomeSider slot="sider" />
+    <div class={`bg-gradient-start shadow-box flex flex-col gap-8 ${CONTENT_PADDING.standard}`}>
+      <div class="mt-4 mb-4">
+        <DifferentialSurround client:only="react" />
+      </div>
+    </div>
+  </TwoColumnLayout>
+</Layout>
