@@ -141,19 +141,33 @@ export default function AudioConsole() {
   const animFrameRef = useRef<number>(0);
   const objectUrlRef = useRef<string | null>(null);
 
+  /* Attach the shared audio element into the host div. Extracted so the
+     astro:page-load handler below can re-attach after client-side routing
+     back to /audio — the island re-mounts with fresh DOM while the element
+     itself survives in the persisted floating player. */
+  const playerHostElRef = useRef<HTMLDivElement | null>(null);
+  const attachPlayer = useCallback((el: HTMLDivElement) => {
+    while (el.firstChild) {
+      el.removeChild(el.firstChild);
+    }
+    globalAudio.controls = true;
+    globalAudio.className = 'w-full mb-3';
+    globalAudio.style.display = '';
+    el.appendChild(globalAudio);
+  }, []);
+
   /* Stable ref callback: attach the shared audio element exactly once.
      Must NOT re-run on re-renders — an inline ref re-invokes on every render
      and any state change here would reload (and stop) the playing audio. */
-  const playerHostRef = useCallback((el: HTMLDivElement | null) => {
-    if (el && globalAudio.parentElement !== el) {
-      while (el.firstChild) {
-        el.removeChild(el.firstChild);
+  const playerHostRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      playerHostElRef.current = el;
+      if (el && globalAudio.parentElement !== el) {
+        attachPlayer(el);
       }
-      globalAudio.controls = true;
-      globalAudio.className = 'w-full mb-3';
-      el.appendChild(globalAudio);
-    }
-  }, []);
+    },
+    [attachPlayer],
+  );
 
   /* ========== Visualization ========== */
   useEffect(() => {
@@ -179,12 +193,52 @@ export default function AudioConsole() {
     return () => audio.removeEventListener('loadedmetadata', onLoaded);
   }, []);
 
+  // Remember playback state across Astro client-side navigation.
+  // before-swap: snapshot whether audio was playing (leave the element
+  //   untouched — pausing here would be heard as a click).
+  // page-load: if it was playing before the swap but is paused now, resume
+  //   it once the new page (and its media policy) has settled.
+  useEffect(() => {
+    let wasPlaying = false;
+    const host = playerHostElRef.current;
+    if (host) attachPlayer(host);
+
+    const onBeforeSwap = () => {
+      wasPlaying = !globalAudio.paused && !globalAudio.ended;
+    };
+    const onPageLoad = () => {
+      const el = playerHostElRef.current;
+      if (el && globalAudio.parentElement !== el) attachPlayer(el);
+      // Resume if we were playing before the swap. The post-swap pause is
+      // asynchronous, so wait a beat for it to land before forcing resume.
+      if (wasPlaying && globalAudio.src) {
+        const tryResume = (attemptsLeft: number) => {
+          if (!globalAudio.paused) {
+            if (attemptsLeft < 5) wasPlaying = false; // confirmed resumed
+            return;
+          }
+          globalAudio.play().catch(() => {});
+          if (attemptsLeft > 0) setTimeout(() => tryResume(attemptsLeft - 1), 150);
+          else wasPlaying = false;
+        };
+        setTimeout(() => tryResume(5), 50);
+      }
+    };
+    document.addEventListener('astro:before-swap', onBeforeSwap);
+    document.addEventListener('astro:page-load', onPageLoad);
+    return () => {
+      document.removeEventListener('astro:before-swap', onBeforeSwap);
+      document.removeEventListener('astro:page-load', onPageLoad);
+    };
+  }, [attachPlayer]);
+
   useEffect(() => {
     return () => {
-      // Detach globalAudio from the console DOM before React destroys it;
-      // the detached element keeps playing on other pages.
+      // Reparent (not destroy) the shared element out of the DOM subtree
+      // React/Astro is about to swap. No load(), no play()/pause() — the
+      // element keeps streaming untouched so audio survives navigation.
+      // The `astro:page-load` handler re-attaches it if the user returns.
       if (globalAudio.parentElement) {
-        globalAudio.remove();
         globalAudio.controls = false;
         globalAudio.className = '';
         globalAudio.style.display = 'none';
