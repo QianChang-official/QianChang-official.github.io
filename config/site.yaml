@@ -13,7 +13,7 @@ site:
   subtitle: AI/理工科 · 开源折腾爱好者 # 网站副标题
   name: 浅唱ヾ落雨殇 # 作者名称
   description: 落赋韶华 —— 浅唱ヾ落雨殇的个人站点：AI / 理工科 / 开源折腾 # 网站描述
-  # avatar: 不使用头像图片
+  avatar: /img/avatar.jpg # 网站头像
   showLogo: false # 不使用模板 SVG Logo，Header 显示 alternate 文字标（Bear Days 字体）
   author: 浅唱ヾ落雨殇 # 作者名称
   url: https://qianchanglys.top # 站点 URL 用于 RSS 和 SEO
