@@ -141,6 +141,20 @@ export default function AudioConsole() {
   const animFrameRef = useRef<number>(0);
   const objectUrlRef = useRef<string | null>(null);
 
+  /* Stable ref callback: attach the shared audio element exactly once.
+     Must NOT re-run on re-renders — an inline ref re-invokes on every render
+     and any state change here would reload (and stop) the playing audio. */
+  const playerHostRef = useCallback((el: HTMLDivElement | null) => {
+    if (el && globalAudio.parentElement !== el) {
+      while (el.firstChild) {
+        el.removeChild(el.firstChild);
+      }
+      globalAudio.controls = true;
+      globalAudio.className = 'w-full mb-3';
+      el.appendChild(globalAudio);
+    }
+  }, []);
+
   /* ========== Visualization ========== */
   useEffect(() => {
     const draw = () => {
@@ -413,22 +427,7 @@ export default function AudioConsole() {
               <span className="text-muted-foreground text-xs">本地文件不会上传，适合先检查 FLAC 兼容性和 EQ 效果</span>
             </label>
 
-            <div
-              ref={(el) => {
-                if (el && globalAudio.parentElement !== el) {
-                  // Clear existing element first
-                  while (el.firstChild) {
-                    el.removeChild(el.firstChild);
-                  }
-                  globalAudio.controls = true;
-                  globalAudio.className = 'w-full mb-3';
-                  el.appendChild(globalAudio);
-                } else if (el && globalAudio.parentElement === el) {
-                  // Update src when source changes
-                  globalAudio.load();
-                }
-              }}
-            />
+            <div ref={playerHostRef} />
 
             <div className="mb-4 rounded-lg bg-muted/40 px-3 py-2 text-muted-foreground text-sm">
               {playerError ? (
