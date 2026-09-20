@@ -210,6 +210,9 @@ navigation:
   - name: 音源
     path: /audio
     icon: ri:music-2-fill
+  - name: 情报
+    path: /crucix
+    icon: ri:radar-line
   - name: 友链
     nameKey: nav.friends
     path: /friends

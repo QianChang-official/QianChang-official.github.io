@@ -1,0 +1,37 @@
+{
+  "generatedAt": "2026-09-20T01:39:36.666Z",
+  "sources": {
+    "github-trending": {
+      "ok": true,
+      "count": 12
+    },
+    "earthquakes": {
+      "ok": true,
+      "count": 15
+    },
+    "spaceflight-news": {
+      "ok": true,
+      "count": 10
+    },
+    "cisa-kev": {
+      "ok": true,
+      "count": 12
+    },
+    "exchange-rates": {
+      "ok": true,
+      "count": 3
+    },
+    "launches": {
+      "ok": true,
+      "count": 10
+    },
+    "hacker-news": {
+      "ok": true,
+      "count": 12
+    },
+    "reddit-world": {
+      "ok": false,
+      "error": "HTTP 403"
+    }
+  }
+}

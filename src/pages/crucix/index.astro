@@ -1,0 +1,180 @@
+---
+import { siteConfig } from '@constants/site-config';
+import Layout from '@layouts/Layout.astro';
+
+const title = `Crucix 情报终端 | ${siteConfig.title}`;
+const description =
+  '开源情报仪表板：GitHub 趋势、地震、航天动态、CVE 漏洞、汇率、火箭发射、Hacker News，数据由 GitHub Actions 定时更新';
+---
+
+<Layout title={title} description={description}>
+  <div class="crucix-terminal">
+    <div class="header">
+      <div class="logo">CRUCIX <span>情报终端</span></div>
+      <div class="meta" id="meta">正在载入…</div>
+    </div>
+
+    <div class="grid" id="grid">
+      <div class="loading">正在从本地数据源拉取…</div>
+    </div>
+
+    <div class="footer">
+      数据源：GitHub · USGS · Spaceflight News · CISA KEV · ExchangeRate · Launch Library · Hacker News<br />
+      由 GitHub Actions 定时更新 · 本项目 <a href="https://github.com/QianChang-official/crucix_zh_repir">crucix_zh_repir</a>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .crucix-terminal {
+    background: #0d1117; color: #c9d1d9;
+    font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace, sans-serif;
+    min-height: 100vh; padding: 24px;
+  }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+  .logo { font-size: 22px; font-weight: 700; letter-spacing: 0.2em; color: #64f0c8; }
+  .logo span { color: #44ccff; }
+  .meta { font-size: 12px; color: #6a8a82; }
+  .meta .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .dot.ok { background: #64f0c8; }
+  .dot.err { background: #ff5f63; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+  .panel {
+    background: rgba(13,20,28,0.85); border: 1px solid rgba(100,240,200,0.12);
+    border-radius: 10px; padding: 16px; backdrop-filter: blur(8px);
+  }
+  .panel h2 {
+    font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    color: #64f0c8; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .panel h2::before { content: ''; display: inline-block; width: 6px; height: 6px; background: #64f0c8; border-radius: 1px; }
+  .item { padding: 8px 0; border-bottom: 1px solid rgba(100,240,200,0.06); font-size: 13px; line-height: 1.5; }
+  .item:last-child { border-bottom: none; }
+  .item a { color: #e8f4f0; text-decoration: none; }
+  .item a:hover { color: #64f0c8; }
+  .item .sub { color: #6a8a82; font-size: 11px; margin-top: 2px; }
+  .item .num { color: #44ccff; font-weight: 600; }
+  .badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; margin-left: 6px; }
+  .badge.mag { background: rgba(255,184,76,0.15); color: #ffb84c; }
+  .badge.cve { background: rgba(255,95,99,0.15); color: #ff5f63; }
+  .loading { color: #6a8a82; font-size: 12px; padding: 20px; text-align: center; }
+  .error { color: #ff5f63; font-size: 12px; padding: 12px; }
+  .rate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .rate-item { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid rgba(100,240,200,0.06); }
+  .rate-item .cur { color: #6a8a82; }
+  .rate-item .val { color: #64f0c8; font-weight: 600; }
+  .footer { margin-top: 24px; text-align: center; font-size: 11px; color: #6a8a82; }
+  .footer a { color: #44ccff; text-decoration: none; }
+</style>
+
+<script>
+  const PANELS = [
+    { id: 'github-trending', title: 'GitHub 趋势', render: renderGithub },
+    { id: 'earthquakes', title: '全球地震 (24h M4.5+)', render: renderQuakes },
+    { id: 'spaceflight-news', title: '航天动态', render: renderSpace },
+    { id: 'cisa-kev', title: '在野利用漏洞 (CISA KEV)', render: renderKev },
+    { id: 'exchange-rates', title: '美元汇率', render: renderRates },
+    { id: 'launches', title: '近期火箭发射', render: renderLaunches },
+    { id: 'hacker-news', title: 'Hacker News 热榜', render: renderHN },
+  ];
+
+  async function load(name) {
+    const res = await fetch(`/crucix/data/${name}.json`);
+    return res.json();
+  }
+
+  function fmtTime(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function panel(title, bodyHtml) {
+    return `<div class="panel"><h2>${title}</h2>${bodyHtml}</div>`;
+  }
+
+  function renderGithub(j) {
+    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
+    return j.data.map(r => `
+      <div class="item">
+        <a href="${r.url}" target="_blank" rel="noopener">${r.name}</a>
+        <div class="sub">${r.desc ? r.desc.slice(0, 80) : ''}</div>
+        <div class="sub"><span class="num">★ ${r.stars.toLocaleString()}</span> ${r.lang || ''}</div>
+      </div>`).join('');
+  }
+
+  function renderQuakes(j) {
+    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
+    return j.data.map(q => `
+      <div class="item">
+        <a href="${q.url}" target="_blank" rel="noopener">${q.place}</a>
+        <span class="badge mag">M${q.mag}</span>
+        <div class="sub">${fmtTime(q.time)}</div>
+      </div>`).join('');
+  }
+
+  function renderSpace(j) {
+    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
+    return j.data.map(a => `
+      <div class="item">
+        <a href="${a.url}" target="_blank" rel="noopener">${a.title}</a>
+        <div class="sub">${fmtTime(a.published)}</div>
+      </div>`).join('');
+  }
+
+  function renderKev(j) {
+    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
+    return j.data.map(v => `
+      <div class="item">
+        <span class="badge cve">${v.cve}</span>
+        <a href="https://nvd.nist.gov/vuln/detail/${v.cve}" target="_blank" rel="noopener">${v.name}</a>
+        <div class="sub">${v.vendor} · ${v.product} · 加入 ${v.added}</div>
+      </div>`).join('');
+  }
+
+  function renderRates(j) {
+    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
+    const items = Object.entries(j.data.rates).map(([c, r]) => `
+      <div class="rate-item"><span class="cur">${c}</span><span class="val">${r}</span></div>`).join('');
+    return `<div class="rate-grid">${items}</div><div class="sub" style="margin-top:8px">更新: ${j.data.updated || ''}</div>`;
+  }
+
+  function renderLaunches(j) {
+    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
+    return j.data.map(l => `
+      <div class="item">
+        ${l.name}
+        <div class="sub">${l.provider || ''} · ${l.location || ''}</div>
+        <div class="sub">${fmtTime(l.net)} · ${l.status || ''}</div>
+      </div>`).join('');
+  }
+
+  function renderHN(j) {
+    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
+    return j.data.map(it => `
+      <div class="item">
+        <a href="${it.url || 'https://news.ycombinator.com/item?id=' + it.id}" target="_blank" rel="noopener">${it.title}</a>
+        <div class="sub"><span class="num">▲ ${it.score}</span> by ${it.by}</div>
+      </div>`).join('');
+  }
+
+  async function main() {
+    const grid = document.getElementById('grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    let metaOk = 0, metaTotal = 0, lastTime = '';
+    for (const p of PANELS) {
+      const j = await load(p.id);
+      grid.insertAdjacentHTML('beforeend', panel(p.title, p.render(j)));
+      metaTotal++;
+      if (j.ok) { metaOk++; lastTime = j.fetchedAt || lastTime; }
+    }
+    const metaEl = document.getElementById('meta');
+    if (metaEl) {
+      metaEl.innerHTML =
+        `<span class="dot ${metaOk === metaTotal ? 'ok' : 'err'}"></span>${metaOk}/${metaTotal} 源正常 · 更新于 ${fmtTime(lastTime)}`;
+    }
+  }
+
+  main();
+</script>
