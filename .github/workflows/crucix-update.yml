@@ -2,11 +2,14 @@ name: Update Crucix Data
 
 on:
   schedule:
-    - cron: '*/30 * * * *'  # 每 30 分钟
+    # 每小时整点跑一次（GitHub Actions 对 */30 高频 schedule 不可靠）
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   fetch:
@@ -22,3 +25,12 @@ jobs:
           git add public/crucix/data/
           git diff --staged --quiet || git commit -m "chore: update crucix data $(date -u +%Y-%m-%dT%H:%MZ)"
           git push
+      # GITHUB_TOKEN 触发的 push 不会触发其他工作流，改用 repository_dispatch 显式触发部署
+      - name: Trigger Pages deploy
+        if: success()
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/dispatches" \
+            -d '{"event_type":"deploy-crucix"}'
