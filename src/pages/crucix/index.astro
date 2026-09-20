@@ -1,101 +1,71 @@
 ---
+import HomeSider from '@components/layout/HomeSider.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import { CONTENT_PADDING } from '@constants/layout';
 import { siteConfig } from '@constants/site-config';
 import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
 
-const title = `Crucix 情报终端 | ${siteConfig.title}`;
+const title = `情报终端 | ${siteConfig.title}`;
 const description =
   '开源情报仪表板：GitHub 趋势、地震、航天动态、CVE 漏洞、汇率、火箭发射、军事空域、自然灾害，数据由 GitHub Actions 每 30 分钟自动更新';
 ---
 
 <Layout title={title} description={description}>
-  <div class="crucix-terminal">
-    <div class="header">
-      <div class="logo">CRUCIX <span>情报终端</span></div>
-      <div class="meta" id="meta">正在载入…</div>
-    </div>
+  <TwoColumnLayout showPostFooter={false}>
+    <Cover slot="cover" title="情报终端" />
+    <HomeSider slot="sider" />
+    <div class={`bg-gradient-start shadow-box flex flex-col gap-6 ${CONTENT_PADDING.standard}`}>
+      <div class="mt-4 flex flex-col gap-6">
+        <!-- 状态栏 + 筛选 -->
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2 text-muted-foreground text-sm" id="meta">
+            <span class="inline-block h-2 w-2 animate-pulse rounded-full bg-primary/60"></span>
+            正在载入数据源…
+          </div>
+          <div class="flex flex-wrap gap-2" id="filterBar">
+            <button type="button" class="chip active" data-cat="all">全部</button>
+            <button type="button" class="chip" data-cat="dev">开发</button>
+            <button type="button" class="chip" data-cat="geo">地缘</button>
+            <button type="button" class="chip" data-cat="space">航天</button>
+            <button type="button" class="chip" data-cat="sec">安全</button>
+            <button type="button" class="chip" data-cat="econ">经济</button>
+            <button type="button" class="chip" data-cat="disaster">灾害</button>
+          </div>
+        </div>
 
-    <!-- 分类筛选 -->
-    <div class="filter-bar" id="filterBar">
-      <button class="chip active" data-cat="all">全部</button>
-      <button class="chip" data-cat="dev">开发</button>
-      <button class="chip" data-cat="geo">地缘</button>
-      <button class="chip" data-cat="space">航天</button>
-      <button class="chip" data-cat="sec">安全</button>
-      <button class="chip" data-cat="econ">经济</button>
-      <button class="chip" data-cat="disaster">灾害</button>
-    </div>
+        <!-- 面板网格 -->
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3" id="grid">
+          <div class="col-span-full py-12 text-center text-muted-foreground text-sm">正在从本地数据源拉取…</div>
+        </div>
 
-    <div class="grid" id="grid">
-      <div class="loading">正在从本地数据源拉取…</div>
+        <p class="text-center text-muted-foreground text-xs leading-relaxed">
+          数据源：GitHub · USGS · Spaceflight News · CISA KEV · ExchangeRate · Launch Library · Hacker News · NASA EONET · OpenSky · World Bank · WHO<br />
+          由 GitHub Actions 每 30 分钟自动更新 ·
+          <a href="https://github.com/QianChang-official/crucix_zh_repir" class="text-primary hover:underline">crucix_zh_repir</a>
+        </p>
+      </div>
     </div>
-
-    <div class="footer">
-      数据源：GitHub · USGS · Spaceflight News · CISA KEV · ExchangeRate · Launch Library · Hacker News · NASA EONET · OpenSky · World Bank · WHO<br />
-      由 GitHub Actions 每 30 分钟自动更新 · 本项目 <a href="https://github.com/QianChang-official/crucix_zh_repir">crucix_zh_repir</a>
-    </div>
-  </div>
+  </TwoColumnLayout>
 </Layout>
 
 <style>
-  .crucix-terminal {
-    background: #0d1117; color: #c9d1d9;
-    font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace, sans-serif;
-    min-height: 100vh; padding: 24px;
-  }
-  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
-  .logo { font-size: 22px; font-weight: 700; letter-spacing: 0.2em; color: #64f0c8; }
-  .logo span { color: #44ccff; }
-  .meta { font-size: 12px; color: #6a8a82; }
-  .meta .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
-  .dot.ok { background: #64f0c8; }
-  .dot.err { background: #ff5f63; }
-
-  .filter-bar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
   .chip {
-    padding: 5px 14px; border-radius: 999px; font-size: 12px; cursor: pointer;
-    background: rgba(100,240,200,0.08); color: #6a8a82; border: 1px solid rgba(100,240,200,0.15);
-    font-family: inherit; transition: all 0.2s;
+    padding: 0.375rem 0.875rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    background: hsl(var(--muted) / 0.5);
+    color: hsl(var(--muted-foreground));
+    border: 1px solid hsl(var(--border));
+    transition: all 0.2s;
   }
-  .chip:hover { background: rgba(100,240,200,0.15); color: #c9d1d9; }
-  .chip.active { background: rgba(100,240,200,0.2); color: #64f0c8; border-color: rgba(100,240,200,0.4); }
-
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
-  .panel {
-    background: rgba(13,20,28,0.85); border: 1px solid rgba(100,240,200,0.12);
-    border-radius: 10px; padding: 16px; backdrop-filter: blur(8px);
-    display: flex; flex-direction: column;
+  .chip:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+  .chip.active {
+    background: hsl(var(--primary) / 0.12);
+    color: hsl(var(--primary));
+    border-color: hsl(var(--primary) / 0.4);
   }
-  .panel.hidden { display: none; }
-  .panel h2 {
-    font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
-    color: #64f0c8; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
-  }
-  .panel h2::before { content: ''; display: inline-block; width: 6px; height: 6px; background: #64f0c8; border-radius: 1px; }
-  .panel .count { margin-left: auto; font-size: 11px; color: #6a8a82; font-weight: 400; }
-  .item { padding: 8px 0; border-bottom: 1px solid rgba(100,240,200,0.06); font-size: 13px; line-height: 1.5; }
-  .item:last-child { border-bottom: none; }
-  .item a { color: #e8f4f0; text-decoration: none; }
-  .item a:hover { color: #64f0c8; }
-  .item .sub { color: #6a8a82; font-size: 11px; margin-top: 2px; }
-  .item .num { color: #44ccff; font-weight: 600; }
-  .badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; margin-left: 6px; }
-  .badge.mag { background: rgba(255,184,76,0.15); color: #ffb84c; }
-  .badge.cve { background: rgba(255,95,99,0.15); color: #ff5f63; }
-  .badge.sev { background: rgba(255,95,99,0.2); color: #ff5f63; }
-  .badge.mil { background: rgba(68,204,255,0.15); color: #44ccff; }
-  .loading { color: #6a8a82; font-size: 12px; padding: 20px; text-align: center; }
-  .error { color: #ff5f63; font-size: 12px; padding: 12px; }
-  .rate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .rate-item { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid rgba(100,240,200,0.06); }
-  .rate-item .cur { color: #6a8a82; }
-  .rate-item .val { color: #64f0c8; font-weight: 600; }
-  .stat-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid rgba(100,240,200,0.06); }
-  .stat-row:last-child { border-bottom: none; }
-  .stat-row .k { color: #6a8a82; }
-  .stat-row .v { color: #64f0c8; font-weight: 600; }
-  .stat-row .v.warn { color: #ffb84c; }
-  .footer { margin-top: 24px; text-align: center; font-size: 11px; color: #6a8a82; line-height: 1.8; }
-  .footer a { color: #44ccff; text-decoration: none; }
 </style>
 
 <script>
@@ -125,124 +95,124 @@ const description =
     return d.toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 
+  function esc(s) {
+    return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
   function panel(p, bodyHtml, count) {
-    return `<div class="panel" data-cat="${p.cat}"><h2>${p.title}<span class="count">${count ?? ''}</span></h2>${bodyHtml}</div>`;
+    return `
+      <div class="panel rounded-xl border border-border/60 bg-card p-4 shadow-sm" data-cat="${p.cat}">
+        <div class="mb-3 flex items-center justify-between">
+          <span class="font-bold text-primary text-xs uppercase tracking-widest">${esc(p.title)}</span>
+          ${count !== '' ? `<span class="text-muted-foreground text-xs">${count}</span>` : ''}
+        </div>
+        <div class="flex flex-col">${bodyHtml}</div>
+      </div>`;
+  }
+
+  function item(html, sub) {
+    return `<div class="border-border/40 border-b py-2 text-sm last:border-b-0">${html}${sub ? `<div class="mt-0.5 text-muted-foreground text-xs">${sub}</div>` : ''}</div>`;
+  }
+
+  function statRow(k, v) {
+    return `<div class="flex items-center justify-between border-border/40 border-b py-2 text-sm last:border-b-0"><span class="text-muted-foreground">${k}</span><span class="font-medium text-foreground">${v}</span></div>`;
   }
 
   function renderGithub(j) {
-    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
-    return j.data.map(r => `
-      <div class="item">
-        <a href="${r.url}" target="_blank" rel="noopener">${r.name}</a>
-        <div class="sub">${r.desc ? r.desc.slice(0, 80) : ''}</div>
-        <div class="sub"><span class="num">★ ${r.stars.toLocaleString()}</span> ${r.lang || ''}</div>
-      </div>`).join('');
+    if (!j.ok) return `<div class="text-red-500 text-xs">抓取失败: ${esc(j.error)}</div>`;
+    return j.data.map(r => item(
+      `<a href="${esc(r.url)}" target="_blank" rel="noopener" class="font-medium text-foreground transition-colors hover:text-primary">${esc(r.name)}</a>`,
+      `${r.desc ? esc(r.desc.slice(0, 70)) + ' · ' : ''}<span class="font-medium text-primary">★ ${r.stars.toLocaleString()}</span> ${esc(r.lang || '')}`
+    )).join('');
   }
 
   function renderHN(j) {
-    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
-    return j.data.map(it => `
-      <div class="item">
-        <a href="${it.url || 'https://news.ycombinator.com/item?id=' + it.id}" target="_blank" rel="noopener">${it.title}</a>
-        <div class="sub"><span class="num">▲ ${it.score}</span> by ${it.by}</div>
-      </div>`).join('');
+    if (!j.ok) return `<div class="text-red-500 text-xs">抓取失败: ${esc(j.error)}</div>`;
+    return j.data.map(it => item(
+      `<a href="${esc(it.url || 'https://news.ycombinator.com/item?id=' + it.id)}" target="_blank" rel="noopener" class="text-foreground transition-colors hover:text-primary">${esc(it.title)}</a>`,
+      `<span class="font-medium text-primary">▲ ${it.score}</span> by ${esc(it.by)}`
+    )).join('');
   }
 
   function renderQuakes(j) {
-    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
-    return j.data.map(q => `
-      <div class="item">
-        <a href="${q.url}" target="_blank" rel="noopener">${q.place}</a>
-        <span class="badge mag">M${q.mag}</span>
-        <div class="sub">${fmtTime(q.time)}</div>
-      </div>`).join('');
+    if (!j.ok) return `<div class="text-red-500 text-xs">抓取失败: ${esc(j.error)}</div>`;
+    return j.data.map(q => item(
+      `<a href="${esc(q.url)}" target="_blank" rel="noopener" class="text-foreground transition-colors hover:text-primary">${esc(q.place)}</a>`,
+      `<span class="font-medium text-orange-500">M${q.mag}</span> · ${fmtTime(q.time)}`
+    )).join('');
   }
 
   function renderSigQuakes(j) {
-    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
-    if (!j.data.length) return `<div class="sub" style="padding:12px">过去 7 天无显著地震</div>`;
-    return j.data.map(q => `
-      <div class="item">
-        <a href="${q.url}" target="_blank" rel="noopener">${q.place}</a>
-        <span class="badge mag">M${q.mag}</span>
-        ${q.tsunami ? '<span class="badge sev">海啸</span>' : ''}
-        <div class="sub">${fmtTime(q.time)}</div>
-      </div>`).join('');
+    if (!j.ok) return `<div class="text-red-500 text-xs">抓取失败: ${esc(j.error)}</div>`;
+    if (!j.data.length) return `<div class="py-3 text-muted-foreground text-xs">过去 7 天无显著地震</div>`;
+    return j.data.map(q => item(
+      `<a href="${esc(q.url)}" target="_blank" rel="noopener" class="text-foreground transition-colors hover:text-primary">${esc(q.place)}</a>`,
+      `<span class="font-medium text-orange-500">M${q.mag}</span>${q.tsunami ? ' <span class="font-medium text-red-500">海啸</span>' : ''} · ${fmtTime(q.time)}`
+    )).join('');
   }
 
   function renderEonet(j) {
-    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
-    return j.data.map(e => `
-      <div class="item">
-        <a href="${e.link}" target="_blank" rel="noopener">${e.title}</a>
-        <div class="sub">${e.category || ''} · ${fmtTime(e.updated)}</div>
-      </div>`).join('');
+    if (!j.ok) return `<div class="text-red-500 text-xs">抓取失败: ${esc(j.error)}</div>`;
+    return j.data.map(e => item(
+      `<a href="${esc(e.link)}" target="_blank" rel="noopener" class="text-foreground transition-colors hover:text-primary">${esc(e.title)}</a>`,
+      `${esc(e.category || '')} · ${fmtTime(e.updated)}`
+    )).join('');
   }
 
   function renderSpace(j) {
-    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
-    return j.data.map(a => `
-      <div class="item">
-        <a href="${a.url}" target="_blank" rel="noopener">${a.title}</a>
-        <div class="sub">${fmtTime(a.published)}</div>
-      </div>`).join('');
+    if (!j.ok) return `<div class="text-red-500 text-xs">抓取失败: ${esc(j.error)}</div>`;
+    return j.data.map(a => item(
+      `<a href="${esc(a.url)}" target="_blank" rel="noopener" class="text-foreground transition-colors hover:text-primary">${esc(a.title)}</a>`,
+      fmtTime(a.published)
+    )).join('');
   }
 
   function renderLaunches(j) {
-    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
-    return j.data.map(l => `
-      <div class="item">
-        ${l.name}
-        <div class="sub">${l.provider || ''} · ${l.location || ''}</div>
-        <div class="sub">${fmtTime(l.net)} · ${l.status || ''}</div>
-      </div>`).join('');
+    if (!j.ok) return `<div class="text-red-500 text-xs">抓取失败: ${esc(j.error)}</div>`;
+    return j.data.map(l => item(
+      `<span class="font-medium text-foreground">${esc(l.name)}</span>`,
+      `${esc(l.provider || '')} · ${esc(l.location || '')} · ${fmtTime(l.net)}`
+    )).join('');
   }
 
   function renderOpensky(j) {
-    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
-    return j.data.map(r => `
-      <div class="stat-row">
-        <span class="k">${r.region}</span>
-        <span class="v">${r.total} 架 <span class="badge mil">${r.military} 军机</span></span>
-      </div>`).join('');
+    if (!j.ok) return `<div class="text-red-500 text-xs">抓取失败: ${esc(j.error)}</div>`;
+    return j.data.map(r => statRow(
+      esc(r.region),
+      `${r.total} 架 <span class="font-medium text-sky-500">${r.military} 军机</span>`
+    )).join('');
   }
 
   function renderKev(j) {
-    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
-    return j.data.map(v => `
-      <div class="item">
-        <span class="badge cve">${v.cve}</span>
-        <a href="https://nvd.nist.gov/vuln/detail/${v.cve}" target="_blank" rel="noopener">${v.name}</a>
-        <div class="sub">${v.vendor} · ${v.product} · 加入 ${v.added}</div>
-      </div>`).join('');
+    if (!j.ok) return `<div class="text-red-500 text-xs">抓取失败: ${esc(j.error)}</div>`;
+    return j.data.map(v => item(
+      `<span class="font-mono font-medium text-red-500 text-xs">${esc(v.cve)}</span> <a href="https://nvd.nist.gov/vuln/detail/${esc(v.cve)}" target="_blank" rel="noopener" class="text-foreground transition-colors hover:text-primary">${esc(v.name)}</a>`,
+      `${esc(v.vendor)} · ${esc(v.product)} · 加入 ${esc(v.added)}`
+    )).join('');
   }
 
   function renderRates(j) {
-    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
-    const items = Object.entries(j.data.rates).map(([c, r]) => `
-      <div class="rate-item"><span class="cur">${c}</span><span class="val">${r}</span></div>`).join('');
-    return `<div class="rate-grid">${items}</div><div class="sub" style="margin-top:8px">更新: ${j.data.updated || ''}</div>`;
+    if (!j.ok) return `<div class="text-red-500 text-xs">抓取失败: ${esc(j.error)}</div>`;
+    const items = Object.entries(j.data.rates).map(([c, r]) => statRow(c, r)).join('');
+    return items + `<div class="mt-2 text-muted-foreground text-xs">更新: ${esc(j.data.updated || '')}</div>`;
   }
 
   function renderGdp(j) {
-    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
-    return j.data.map(r => `
-      <div class="stat-row">
-        <span class="k">${r.year}</span>
-        <span class="v ${r.value < 0 ? 'warn' : ''}">${r.value !== null ? r.value + '%' : '—'}</span>
-      </div>`).join('');
+    if (!j.ok) return `<div class="text-red-500 text-xs">抓取失败: ${esc(j.error)}</div>`;
+    return j.data.map(r => statRow(
+      esc(r.year),
+      `<span class="${r.value < 0 ? 'text-orange-500' : 'text-primary'}">${r.value !== null ? r.value + '%' : '—'}</span>`
+    )).join('');
   }
 
   function renderWho(j) {
-    if (!j.ok) return `<div class="error">抓取失败: ${j.error}</div>`;
-    return j.data.map(o => `
-      <div class="item">
-        <a href="${o.url}" target="_blank" rel="noopener">${o.title}</a>
-        <div class="sub">${fmtTime(o.date)}</div>
-      </div>`).join('');
+    if (!j.ok) return `<div class="text-red-500 text-xs">抓取失败: ${esc(j.error)}</div>`;
+    return j.data.map(o => item(
+      `<a href="${esc(o.url)}" target="_blank" rel="noopener" class="text-foreground transition-colors hover:text-primary">${esc(o.title)}</a>`,
+      fmtTime(o.date)
+    )).join('');
   }
 
-  // 分类筛选
   function setupFilter() {
     const bar = document.getElementById('filterBar');
     if (!bar) return;
@@ -265,15 +235,17 @@ const description =
     let metaOk = 0, metaTotal = 0, lastTime = '';
     for (const p of PANELS) {
       const j = await load(p.id);
-      const count = j.ok && Array.isArray(j.data) ? j.data.length : (j.ok ? '' : '');
+      const count = j.ok && Array.isArray(j.data) ? j.data.length : '';
       grid.insertAdjacentHTML('beforeend', panel(p, p.render(j), count));
       metaTotal++;
       if (j.ok) { metaOk++; lastTime = j.fetchedAt || lastTime; }
     }
     const metaEl = document.getElementById('meta');
     if (metaEl) {
+      const allOk = metaOk === metaTotal;
       metaEl.innerHTML =
-        `<span class="dot ${metaOk === metaTotal ? 'ok' : 'err'}"></span>${metaOk}/${metaTotal} 源正常 · 更新于 ${fmtTime(lastTime)}`;
+        `<span class="inline-block h-2 w-2 rounded-full ${allOk ? 'bg-primary' : 'bg-red-500'}"></span>` +
+        `${metaOk}/${metaTotal} 源正常 · 更新于 ${fmtTime(lastTime)}`;
     }
     setupFilter();
   }
