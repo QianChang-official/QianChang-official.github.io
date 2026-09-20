@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-20T01:39:36.666Z",
+  "generatedAt": "2026-09-20T02:30:05.749Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -22,8 +22,8 @@
       "count": 3
     },
     "launches": {
-      "ok": true,
-      "count": 10
+      "ok": false,
+      "error": "This operation was aborted"
     },
     "hacker-news": {
       "ok": true,
