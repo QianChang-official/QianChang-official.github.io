@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: write
-  actions: write
   pages: write
   id-token: write
 
@@ -26,9 +25,12 @@ jobs:
           git add public/crucix/data/
           git diff --staged --quiet || git commit -m "chore: update crucix data $(date -u +%Y-%m-%dT%H:%MZ)"
           git push
-      # GITHUB_TOKEN 触发的 push 不会触发其他工作流，需要显式触发部署
+      # GITHUB_TOKEN 触发的 push 不会触发其他工作流，改用 repository_dispatch 显式触发部署
       - name: Trigger Pages deploy
         if: success()
-        run: gh workflow run "Deploy to GitHub Pages"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/dispatches" \
+            -d '{"event_type":"deploy-crucix"}'
