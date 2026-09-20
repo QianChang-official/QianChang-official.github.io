@@ -3,6 +3,7 @@
  * Never throws: failures are returned as an `error` field so callers can cache them.
  */
 
+import { isIP } from 'node:net';
 import metascraper from 'metascraper';
 import metascraperDescription from 'metascraper-description';
 import metascraperImage from 'metascraper-image';
@@ -33,11 +34,77 @@ const scraper = metascraper([
   metascraperLogoFavicon(),
 ]);
 
+function isPrivateOrReservedIp(ip: string): boolean {
+  // IPv4 private, loopback, link-local, reserved and multicast ranges.
+  if (isIP(ip) === 4) {
+    const parts = ip.split('.').map(Number);
+    const [a, b, c] = parts;
+    if (a === 127) return true;
+    if (a === 10) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 169 && b === 254) return true;
+    if (a >= 224 && a <= 239) return true;
+    if (a === 192 && b === 0 && (c === 0 || c === 2)) return true;
+    if (a === 198 && (b === 18 || b === 19)) return true;
+    if (a === 203 && b === 0 && c === 113) return true;
+    if (a >= 240) return true;
+    return false;
+  }
+
+  // IPv6 loopback, link-local, unique-local, multicast and unspecified addresses.
+  if (isIP(ip) === 6) {
+    const lower = ip.toLowerCase();
+    if (lower === '::1' || lower === '::') return true;
+    if (lower.startsWith('fe80:')) return true;
+    if (lower.startsWith('fc') || lower.startsWith('fd')) return true;
+    if (lower.startsWith('ff')) return true;
+    return false;
+  }
+
+  return false;
+}
+
+export function validateOgUrl(urlString: string): { ok: true; url: URL } | { ok: false; reason: string } {
+  let url: URL;
+  try {
+    url = new URL(urlString);
+  } catch {
+    return { ok: false, reason: 'Invalid URL' };
+  }
+
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    return { ok: false, reason: `Disallowed protocol: ${url.protocol}` };
+  }
+
+  const hostname = url.hostname.toLowerCase();
+  if (hostname === 'localhost' || hostname.endsWith('.localhost')) {
+    return { ok: false, reason: 'Localhost host is not allowed' };
+  }
+
+  const ipCandidate = hostname.startsWith('[') && hostname.endsWith(']') ? hostname.slice(1, -1) : hostname;
+  if (isPrivateOrReservedIp(ipCandidate)) {
+    return { ok: false, reason: 'Private or reserved IP address is not allowed' };
+  }
+
+  return { ok: true, url };
+}
+
 /**
  * Fetch OG data from a URL at build time using metascraper.
  * With timeout to avoid hanging builds.
  */
 export async function fetchOGData(url: string): Promise<OGData> {
+  const validation = validateOgUrl(url);
+  if (!validation.ok) {
+    console.warn(`[Link Embed] Blocked unsafe URL ${url}: ${validation.reason}`);
+    return {
+      originUrl: url,
+      url,
+      error: `Blocked unsafe URL: ${validation.reason}`,
+    };
+  }
+
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
