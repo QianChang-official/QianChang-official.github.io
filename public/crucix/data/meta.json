@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-20T01:39:36.666Z",
+  "generatedAt": "2026-09-20T02:42:38.057Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -32,6 +32,38 @@
     "reddit-world": {
       "ok": false,
       "error": "HTTP 403"
+    },
+    "gdelt": {
+      "ok": false,
+      "error": "HTTP 429"
+    },
+    "nasa-eonet": {
+      "ok": true,
+      "count": 12
+    },
+    "opensky-military": {
+      "ok": true,
+      "count": 3
+    },
+    "noaa-alerts": {
+      "ok": false,
+      "error": "HTTP 400"
+    },
+    "worldbank-gdp": {
+      "ok": true,
+      "count": 5
+    },
+    "usgs-significant": {
+      "ok": true,
+      "count": 1
+    },
+    "spacex": {
+      "ok": false,
+      "error": "HTTP 525"
+    },
+    "who-outbreaks": {
+      "ok": true,
+      "count": 10
     }
   }
 }
