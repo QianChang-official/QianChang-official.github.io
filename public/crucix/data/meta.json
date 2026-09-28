@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-27T23:45:03.609Z",
+  "generatedAt": "2026-09-28T04:00:29.559Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -7,7 +7,7 @@
     },
     "earthquakes": {
       "ok": true,
-      "count": 10
+      "count": 14
     },
     "spaceflight-news": {
       "ok": true,
@@ -22,8 +22,8 @@
       "count": 3
     },
     "launches": {
-      "ok": true,
-      "count": 10
+      "ok": false,
+      "error": "This operation was aborted"
     },
     "hacker-news": {
       "ok": true,
