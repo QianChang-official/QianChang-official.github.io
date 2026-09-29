@@ -1,5 +1,5 @@
 ---
-title: 均值、基准、部署：机器人评测的三层幻觉
+title: 具身智能的三层评测幻觉：从 25 个 Episode 到 1228 篇论文
 link: robot-policy-learning-analysis
 date: 2026-09-19 23:50:00
 updated: 2026-09-29 15:30:00
