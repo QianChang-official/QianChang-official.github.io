@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-30T16:41:13.891Z",
+  "generatedAt": "2026-09-30T21:14:05.533Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -7,7 +7,7 @@
     },
     "earthquakes": {
       "ok": true,
-      "count": 13
+      "count": 14
     },
     "spaceflight-news": {
       "ok": true,
@@ -35,7 +35,7 @@
     },
     "gdelt": {
       "ok": false,
-      "error": "fetch failed"
+      "error": "HTTP 429"
     },
     "nasa-eonet": {
       "ok": true,
