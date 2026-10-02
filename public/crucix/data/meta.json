@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-02T14:40:52.298Z",
+  "generatedAt": "2026-10-02T19:46:20.986Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -7,11 +7,11 @@
     },
     "earthquakes": {
       "ok": true,
-      "count": 14
+      "count": 15
     },
     "spaceflight-news": {
-      "ok": true,
-      "count": 10
+      "ok": false,
+      "error": "HTTP 429"
     },
     "cisa-kev": {
       "ok": true,
@@ -50,12 +50,12 @@
       "error": "HTTP 400"
     },
     "worldbank-gdp": {
-      "ok": false,
-      "error": "This operation was aborted"
+      "ok": true,
+      "count": 5
     },
     "usgs-significant": {
       "ok": true,
-      "count": 2
+      "count": 3
     },
     "spacex": {
       "ok": false,
