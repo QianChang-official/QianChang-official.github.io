@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-10-02T19:46:20.986Z",
+  "generatedAt": "2026-10-02T23:34:18.772Z",
   "sources": {
     "github-trending": {
-      "ok": true,
-      "count": 12
+      "ok": false,
+      "error": "HTTP 403"
     },
     "earthquakes": {
       "ok": true,
       "count": 15
     },
     "spaceflight-news": {
-      "ok": false,
-      "error": "HTTP 429"
+      "ok": true,
+      "count": 10
     },
     "cisa-kev": {
       "ok": true,
@@ -35,7 +35,7 @@
     },
     "gdelt": {
       "ok": false,
-      "error": "fetch failed"
+      "error": "HTTP 429"
     },
     "nasa-eonet": {
       "ok": true,
@@ -55,7 +55,7 @@
     },
     "usgs-significant": {
       "ok": true,
-      "count": 3
+      "count": 2
     },
     "spacex": {
       "ok": false,
