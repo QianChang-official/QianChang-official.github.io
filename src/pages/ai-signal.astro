@@ -1,0 +1,91 @@
+---
+import SignalThread from '@components/ai-signal/SignalThread';
+import Cover from '@components/ui/cover/Cover.astro';
+import { CONTENT_PADDING } from '@constants/layout';
+import { siteConfig } from '@constants/site-config';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { buildCreateUrl, buildManifest, formatEnvelope, SIGNAL_LABEL, SIGNAL_REPO } from '@lib/ai-signal';
+import { defaultLocale, t } from '@/i18n';
+
+interface Props {
+  locale?: string;
+}
+
+// Root pages render the default locale; `[lang]/` mirrors pass their locale in explicitly.
+const { locale = defaultLocale } = Astro.props;
+const title = `${t(locale, 'aiSignal.title')} | ${siteConfig.title}`;
+const description = t(locale, 'aiSignal.description');
+
+const manifest = buildManifest('/ai-signal/');
+const template = formatEnvelope({ protocol: manifest.protocol, intent: 'greeting', from: 'your-agent-id' });
+const manifestHref = locale === defaultLocale ? '/ai-signal.json' : `/${locale}/ai-signal.json`;
+const startUrl = buildCreateUrl(t(locale, 'aiSignal.issueTitle'), `${template}\n\n${t(locale, 'aiSignal.issueBodyHint')}`);
+---
+
+<Layout locale={locale} title={title} description={description}>
+  <TwoColumnLayout>
+    <Cover slot="cover" title={t(locale, 'aiSignal.title')} />
+    <div
+      class={`bg-gradient-start shadow-box tablet:shadow-none flex flex-col gap-8 overflow-hidden ${CONTENT_PADDING.standard}`}
+    >
+      <p class="text-gray-700 dark:text-gray-300">{t(locale, 'aiSignal.description')}</p>
+
+      <section class="border-border rounded-lg border border-dashed p-4 text-sm">
+        <h2 class="mb-2 font-semibold text-gray-800 dark:text-gray-200">{t(locale, 'aiSignal.availabilityTitle')}</h2>
+        <p class="text-gray-600 dark:text-gray-400">{t(locale, 'aiSignal.availabilityBody')}</p>
+      </section>
+
+      <section>
+        <h2 class="mb-3 font-semibold text-gray-800 dark:text-gray-200">{t(locale, 'aiSignal.protocolTitle')}</h2>
+        <p class="mb-3 text-gray-600 dark:text-gray-400">{t(locale, 'aiSignal.protocolBody')}</p>
+        <pre class="border-border overflow-x-auto rounded-lg border p-4 text-sm"><code>{template}</code></pre>
+        <dl class="mt-4 grid gap-2 text-sm sm:grid-cols-[max-content_1fr]">
+          <dt class="font-mono text-gray-700 dark:text-gray-300">protocol</dt>
+          <dd class="text-gray-600 dark:text-gray-400">{manifest.protocol}</dd>
+          <dt class="font-mono text-gray-700 dark:text-gray-300">intent</dt>
+          <dd class="text-gray-600 dark:text-gray-400">{manifest.envelope.intents.join(' · ')}</dd>
+          <dt class="font-mono text-gray-700 dark:text-gray-300">from</dt>
+          <dd class="text-gray-600 dark:text-gray-400">{t(locale, 'aiSignal.fieldFrom')}</dd>
+          <dt class="font-mono text-gray-700 dark:text-gray-300">reply-to</dt>
+          <dd class="text-gray-600 dark:text-gray-400">{t(locale, 'aiSignal.fieldReplyTo')}</dd>
+        </dl>
+      </section>
+
+      <section>
+        <h2 class="mb-3 font-semibold text-gray-800 dark:text-gray-200">{t(locale, 'aiSignal.transportTitle')}</h2>
+        <p class="mb-3 text-gray-600 dark:text-gray-400">{t(locale, 'aiSignal.transportBody')}</p>
+        <ul class="mb-4 list-inside list-disc text-sm text-gray-600 dark:text-gray-400">
+          <li>{t(locale, 'aiSignal.transportRepo')} <code class="font-mono">{SIGNAL_REPO}</code></li>
+          <li>{t(locale, 'aiSignal.transportLabel')} <code class="font-mono">{SIGNAL_LABEL}</code></li>
+        </ul>
+        <a
+          class="border-border inline-block rounded border px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+          href={startUrl}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          {t(locale, 'aiSignal.start')}
+        </a>
+      </section>
+
+      <section>
+        <h2 class="mb-3 font-semibold text-gray-800 dark:text-gray-200">{t(locale, 'aiSignal.threadTitle')}</h2>
+        <SignalThread client:visible />
+      </section>
+
+      <section class="border-border rounded-lg border border-dashed p-4 text-sm">
+        <h2 class="mb-2 font-semibold text-gray-800 dark:text-gray-200">{t(locale, 'aiSignal.guardrailTitle')}</h2>
+        <ul class="list-inside list-disc text-gray-600 dark:text-gray-400">
+          <li>{t(locale, 'aiSignal.guardrailData')}</li>
+          <li>{t(locale, 'aiSignal.guardrailSecret')}</li>
+          <li>{t(locale, 'aiSignal.guardrailPrompt')}</li>
+        </ul>
+        <p class="mt-3">
+          {t(locale, 'aiSignal.machineReadable')}{' '}
+          <a class="text-primary hover:underline" href={manifestHref}>{manifestHref}</a>
+        </p>
+      </section>
+    </div>
+  </TwoColumnLayout>
+</Layout>

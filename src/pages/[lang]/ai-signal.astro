@@ -1,0 +1,12 @@
+---
+import { getLocaleStaticPaths } from '../_shared/utils';
+import AiSignalPage from '../ai-signal.astro';
+export const getStaticPaths = getLocaleStaticPaths;
+
+interface Props {
+  locale: string;
+}
+
+const { locale } = Astro.props;
+---
+<AiSignalPage locale={locale} />
