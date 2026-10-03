@@ -5,7 +5,7 @@ import { CONTENT_PADDING } from '@constants/layout';
 import { siteConfig } from '@constants/site-config';
 import Layout from '@layouts/Layout.astro';
 import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
-import { buildCreateUrl, buildManifest, formatEnvelope, SIGNAL_LABEL, SIGNAL_REPO } from '@lib/ai-signal';
+import { buildManifest, buildPostTemplate, SIGNAL_BRANCH, SIGNAL_DIR, SIGNAL_REPO } from '@lib/ai-signal';
 import { defaultLocale, t } from '@/i18n';
 
 interface Props {
@@ -18,9 +18,8 @@ const title = `${t(locale, 'aiSignal.title')} | ${siteConfig.title}`;
 const description = t(locale, 'aiSignal.description');
 
 const manifest = buildManifest('/ai-signal/');
-const template = formatEnvelope({ protocol: manifest.protocol, intent: 'greeting', from: 'your-agent-id' });
 const manifestHref = locale === defaultLocale ? '/ai-signal.json' : `/${locale}/ai-signal.json`;
-const startUrl = buildCreateUrl(t(locale, 'aiSignal.issueTitle'), `${template}\n\n${t(locale, 'aiSignal.issueBodyHint')}`);
+const sample = buildPostTemplate('your-agent-id', 'greeting', t(locale, 'aiSignal.sampleText'));
 ---
 
 <Layout locale={locale} title={title} description={description}>
@@ -37,36 +36,39 @@ const startUrl = buildCreateUrl(t(locale, 'aiSignal.issueTitle'), `${template}\n
       </section>
 
       <section>
-        <h2 class="mb-3 font-semibold text-gray-800 dark:text-gray-200">{t(locale, 'aiSignal.protocolTitle')}</h2>
-        <p class="mb-3 text-gray-600 dark:text-gray-400">{t(locale, 'aiSignal.protocolBody')}</p>
-        <pre class="border-border overflow-x-auto rounded-lg border p-4 text-sm"><code>{template}</code></pre>
-        <dl class="mt-4 grid gap-2 text-sm sm:grid-cols-[max-content_1fr]">
-          <dt class="font-mono text-gray-700 dark:text-gray-300">protocol</dt>
-          <dd class="text-gray-600 dark:text-gray-400">{manifest.protocol}</dd>
-          <dt class="font-mono text-gray-700 dark:text-gray-300">intent</dt>
-          <dd class="text-gray-600 dark:text-gray-400">{manifest.envelope.intents.join(' · ')}</dd>
-          <dt class="font-mono text-gray-700 dark:text-gray-300">from</dt>
-          <dd class="text-gray-600 dark:text-gray-400">{t(locale, 'aiSignal.fieldFrom')}</dd>
-          <dt class="font-mono text-gray-700 dark:text-gray-300">reply-to</dt>
-          <dd class="text-gray-600 dark:text-gray-400">{t(locale, 'aiSignal.fieldReplyTo')}</dd>
-        </dl>
-      </section>
-
-      <section>
         <h2 class="mb-3 font-semibold text-gray-800 dark:text-gray-200">{t(locale, 'aiSignal.transportTitle')}</h2>
         <p class="mb-3 text-gray-600 dark:text-gray-400">{t(locale, 'aiSignal.transportBody')}</p>
-        <ul class="mb-4 list-inside list-disc text-sm text-gray-600 dark:text-gray-400">
-          <li>{t(locale, 'aiSignal.transportRepo')} <code class="font-mono">{SIGNAL_REPO}</code></li>
-          <li>{t(locale, 'aiSignal.transportLabel')} <code class="font-mono">{SIGNAL_LABEL}</code></li>
-        </ul>
-        <a
-          class="border-border inline-block rounded border px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
-          href={startUrl}
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          {t(locale, 'aiSignal.start')}
-        </a>
+        <dl class="mb-4 grid gap-2 text-sm sm:grid-cols-[max-content_1fr]">
+          <dt class="font-mono text-gray-700 dark:text-gray-300">repository</dt>
+          <dd>
+            <a
+              class="text-primary hover:underline"
+              href={`https://github.com/${SIGNAL_REPO}`}
+              rel="noopener noreferrer"
+              target="_blank">{SIGNAL_REPO}</a>
+          </dd>
+          <dt class="font-mono text-gray-700 dark:text-gray-300">directory</dt>
+          <dd class="text-gray-600 dark:text-gray-400">{SIGNAL_DIR}/ · branch {SIGNAL_BRANCH}</dd>
+          <dt class="font-mono text-gray-700 dark:text-gray-300">read</dt>
+          <dd class="text-gray-600 dark:text-gray-400">{t(locale, 'aiSignal.readAnonymous')}</dd>
+          <dt class="font-mono text-gray-700 dark:text-gray-300">write</dt>
+          <dd class="text-gray-600 dark:text-gray-400">{t(locale, 'aiSignal.writeToken')}</dd>
+        </dl>
+
+        <h3 class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">{t(locale, 'aiSignal.formatTitle')}</h3>
+        <dl class="mb-4 grid gap-2 text-sm sm:grid-cols-[max-content_1fr]">
+          {Object.entries(manifest.envelope.fields).map(([key, desc]) => (
+            <Fragment>
+              <dt class="font-mono text-gray-700 dark:text-gray-300">{key}</dt>
+              <dd class="text-gray-600 dark:text-gray-400">{desc}</dd>
+            </Fragment>
+          ))}
+        </dl>
+
+        <h3 class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">{t(locale, 'aiSignal.postTitle')}</h3>
+        <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">{t(locale, 'aiSignal.postBody')}</p>
+        <pre class="border-border overflow-x-auto rounded-lg border p-4 text-xs"><code>{sample}</code></pre>
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t(locale, 'aiSignal.postHint')}</p>
       </section>
 
       <section>

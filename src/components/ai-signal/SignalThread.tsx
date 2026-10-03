@@ -1,32 +1,54 @@
 import { ErrorBoundary, ErrorFallback } from '@components/common';
 import { useIsMounted } from '@hooks/useIsMounted';
 import { useTranslation } from '@hooks/useTranslation';
-import { buildApiUrl, selectMessages, stripEnvelope } from '@lib/ai-signal';
+import { assertApiUrl, buildListUrl, parseRecord, selectEntries } from '@lib/ai-signal';
 import { useCallback, useEffect, useState } from 'react';
-import type { GithubIssue, SignalMessage } from '@/types/ai-signal';
+import type { GithubContentEntry, SignalMessage, SignalRecord } from '@/types/ai-signal';
 
-type Status = 'idle' | 'loading' | 'ready' | 'error';
+type Status = 'loading' | 'ready' | 'error';
+
+/** Newest last in the DOM, which reads like a conversation. */
+async function loadThread(): Promise<SignalMessage[]> {
+  const listingResponse = await fetch(buildListUrl(), { headers: { Accept: 'application/vnd.github+json' } });
+  if (!listingResponse.ok) throw new Error(`listing ${listingResponse.status}`);
+
+  // A repo can hold more files than we want to fetch; the newest are the
+  // relevant ones, and selectEntries sorts oldest first, so take from the end.
+  const entries = selectEntries((await listingResponse.json()) as GithubContentEntry[]).slice(-40);
+
+  const loaded = await Promise.all(
+    entries.map(async (entry): Promise<SignalMessage | null> => {
+      const response = await fetch(assertApiUrl(entry.download_url).toString());
+      if (!response.ok) return null;
+      const record = parseRecord((await response.json()) as unknown) as SignalRecord | null;
+      return record ? { ...record, file: entry.name, url: entry.download_url } : null;
+    }),
+  );
+
+  return loaded.filter((m): m is SignalMessage => m !== null);
+}
 
 function MessageCard({ message }: { message: SignalMessage }) {
   const { t } = useTranslation();
+  const mine = message.role === 'operator';
 
   return (
-    <article className="rounded-lg border border-border bg-card p-4 shadow-sm">
+    <article className={`rounded-lg border p-4 shadow-sm ${mine ? 'border-primary/40 bg-primary/5' : 'border-border bg-card'}`}>
       <header className="mb-2 flex flex-wrap items-center gap-2 text-sm">
-        <span className="font-medium text-gray-800 dark:text-gray-200">{message.envelope?.from ?? message.author}</span>
-        {message.envelope && (
-          <span className="rounded border border-border px-1.5 py-0.5 font-mono text-gray-500 text-xs dark:text-gray-400">
-            {message.envelope.intent}
+        <span className="font-medium text-gray-800 dark:text-gray-200">{message.from}</span>
+        <span className="rounded border border-border px-1.5 py-0.5 font-mono text-gray-500 text-xs dark:text-gray-400">
+          {message.intent}
+        </span>
+        {message.inReplyTo && (
+          <span className="text-gray-400 text-xs">
+            {t('aiSignal.inReplyTo')} <span className="font-mono">{message.inReplyTo}</span>
           </span>
         )}
-        <span className={message.open ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}>
-          {message.open ? t('aiSignal.statusOpen') : t('aiSignal.statusClosed')}
-        </span>
-        <a className="ml-auto text-primary hover:underline" href={message.url} rel="noopener noreferrer" target="_blank">
-          #{message.id}
-        </a>
+        <time className="ml-auto text-gray-400 text-xs" dateTime={message.sent}>
+          {message.sent.slice(0, 16).replace('T', ' ')}
+        </time>
       </header>
-      <p className="text-gray-700 dark:text-gray-300">{stripEnvelope(message.body)}</p>
+      <p className="whitespace-pre-wrap text-gray-700 dark:text-gray-300">{message.text}</p>
     </article>
   );
 }
@@ -34,16 +56,13 @@ function MessageCard({ message }: { message: SignalMessage }) {
 export default function SignalThread() {
   const { t } = useTranslation();
   const isMounted = useIsMounted();
-  const [status, setStatus] = useState<Status>('idle');
+  const [status, setStatus] = useState<Status>('loading');
   const [messages, setMessages] = useState<SignalMessage[]>([]);
 
   const load = useCallback(async () => {
     setStatus('loading');
     try {
-      // buildApiUrl validates the origin before anything leaves the browser.
-      const response = await fetch(buildApiUrl(), { headers: { Accept: 'application/vnd.github+json' } });
-      if (!response.ok) throw new Error(`GitHub responded ${response.status}`);
-      setMessages(selectMessages((await response.json()) as GithubIssue[]));
+      setMessages(await loadThread());
       setStatus('ready');
     } catch {
       setStatus('error');

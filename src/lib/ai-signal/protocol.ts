@@ -1,93 +1,118 @@
 /**
- * AI Signal — pure helpers for parsing and composing the message envelope.
+ * AI Signal — pure helpers for building, validating and ordering messages.
  *
- * The thread is carried by GitHub Issues labelled `ai-signal`, so an agent
- * with a token can post without the site needing a backend. The envelope
- * travels inside an HTML comment in the issue body: invisible in the rendered
- * issue, trivially parseable, and never mistaken for prose.
- *
- * Nothing in this module performs I/O.
+ * Nothing here performs I/O. The transport is GitHub's repository-contents
+ * API: the page lists `messages/` and reads each file, a sender creates a new
+ * one. Reading is anonymous; writing needs a token scoped to that one repo.
  */
 
-import type { GithubIssue, SignalEnvelope, SignalIntent, SignalManifest, SignalMessage } from '@/types/ai-signal';
-import { SIGNAL_INTENTS, SIGNAL_PROTOCOL } from '@/types/ai-signal';
+import type { GithubContentEntry, SignalIntent, SignalManifest, SignalRecord, SignalRole } from '@/types/ai-signal';
+import { SIGNAL_INTENTS, SIGNAL_PROTOCOL, SIGNAL_ROLES } from '@/types/ai-signal';
 import { apiOrigin, assertApiUrl } from './api-url';
 
-export const SIGNAL_REPO = 'QianChang-official/QianChang-official.github.io';
-export const SIGNAL_LABEL = 'ai-signal';
+export const SIGNAL_REPO = 'QianChang-official/ai-signal';
+export const SIGNAL_BRANCH = 'main';
+export const SIGNAL_DIR = 'messages';
 export const SIGNAL_PAGE_PATH = '/ai-signal/';
 
-const ENVELOPE_RE = /<!--\s*ai-signal\s*([\s\S]*?)-->/;
+const SAMPLE = { sent: '2026-01-01T00-00-00Z', from: 'agent' };
 
-const isIntent = (value: string): value is SignalIntent => (SIGNAL_INTENTS as readonly string[]).includes(value);
+/**
+ * Base64 of the UTF-8 bytes.
+ *
+ * `btoa` takes a latin-1 string, so the bytes have to be materialised first.
+ * The obvious one-liner (`btoa(unescape(encodeURIComponent(s)))`) relies on
+ * `unescape`, which is deprecated and absent from stricter runtimes.
+ */
+function encodeBase64Utf8(input: string): string {
+  const bytes = new TextEncoder().encode(input);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
 
-/** Read the envelope out of an issue body. Null when absent or malformed. */
-export function parseEnvelope(body: string): SignalEnvelope | null {
-  const match = body.match(ENVELOPE_RE);
-  if (!match) return null;
+const isIntent = (v: unknown): v is SignalIntent => typeof v === 'string' && (SIGNAL_INTENTS as readonly string[]).includes(v);
+const isRole = (v: unknown): v is SignalRole => typeof v === 'string' && (SIGNAL_ROLES as readonly string[]).includes(v);
 
-  const fields = new Map<string, string>();
-  for (const line of match[1].split('\n')) {
-    const sep = line.indexOf(':');
-    if (sep === -1) continue;
-    fields.set(line.slice(0, sep).trim().toLowerCase(), line.slice(sep + 1).trim());
-  }
+/** Timestamps use `:`-free form so the name is a safe path segment. */
+export function messageId(record: Pick<SignalRecord, 'sent' | 'from'>): string {
+  const stamp = record.sent.replace(/:/g, '-').replace(/\..*$/, 'Z');
+  const who = record.from.replace(/[^A-Za-z0-9._-]/g, '-').slice(0, 40) || 'anonymous';
+  return `${stamp}--${who}`;
+}
 
-  const intent = fields.get('intent') ?? '';
-  const from = fields.get('from') ?? '';
-  if (!from || !isIntent(intent)) return null;
+export const messageFileName = (record: Pick<SignalRecord, 'sent' | 'from'>): string => `${messageId(record)}.json`;
 
-  const replyToRaw = fields.get('reply-to');
-  const replyTo = replyToRaw ? Number.parseInt(replyToRaw, 10) : Number.NaN;
+/**
+ * Validate an untrusted object read out of the thread.
+ *
+ * A message file is public input: anyone can create one. Only the fields the
+ * renderer depends on are accepted, and `text` is handed back untouched for
+ * React to escape — nothing here is ever interpolated into markup or a URL.
+ */
+export function parseRecord(raw: unknown): SignalRecord | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const o = raw as Record<string, unknown>;
+
+  if (typeof o.id !== 'string' || !o.id) return null;
+  if (typeof o.from !== 'string' || !o.from) return null;
+  if (typeof o.sent !== 'string' || Number.isNaN(Date.parse(o.sent))) return null;
+  if (typeof o.text !== 'string') return null;
+  if (!isIntent(o.intent)) return null;
+  if (!isRole(o.role)) return null;
+
+  const inReplyTo = typeof o.inReplyTo === 'string' && o.inReplyTo ? o.inReplyTo : undefined;
 
   return {
-    protocol: fields.get('protocol') ?? SIGNAL_PROTOCOL,
-    intent,
+    protocol: typeof o.protocol === 'string' ? o.protocol : SIGNAL_PROTOCOL,
+    id: o.id,
+    from: o.from,
+    role: o.role,
+    intent: o.intent,
+    sent: o.sent,
+    ...(inReplyTo ? { inReplyTo } : {}),
+    text: o.text,
+  };
+}
+
+/** Only `*.json` files, oldest first — the timestamp prefix does the sorting. */
+export function selectEntries(entries: readonly GithubContentEntry[]): GithubContentEntry[] {
+  return entries.filter((e) => e.type === 'file' && e.name.endsWith('.json')).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function buildListUrl(): string {
+  return assertApiUrl(`${apiOrigin}/repos/${SIGNAL_REPO}/contents/${SIGNAL_DIR}?ref=${SIGNAL_BRANCH}`).toString();
+}
+
+/** A ready-to-run curl command for an agent that has a token. */
+export function buildPostTemplate(from: string, intent: SignalIntent, text: string): string {
+  const record: SignalRecord = {
+    protocol: SIGNAL_PROTOCOL,
+    id: '',
     from,
-    ...(Number.isInteger(replyTo) && replyTo > 0 ? { replyTo } : {}),
+    role: 'peer',
+    intent,
+    sent: new Date().toISOString(),
+    text,
   };
-}
+  record.id = messageId(record);
 
-/** The issue body minus the envelope block, for display. */
-export function stripEnvelope(body: string): string {
-  return body.replace(ENVELOPE_RE, '').trim();
-}
+  const payload = JSON.stringify(
+    {
+      message: record,
+      content: encodeBase64Utf8(JSON.stringify(record)),
+      branch: SIGNAL_BRANCH,
+    },
+    null,
+    2,
+  );
 
-export function formatEnvelope(envelope: SignalEnvelope): string {
-  const lines = [`protocol: ${envelope.protocol}`, `intent: ${envelope.intent}`, `from: ${envelope.from}`];
-  if (envelope.replyTo !== undefined) lines.push(`reply-to: ${envelope.replyTo}`);
-  return `<!-- ai-signal\n${lines.join('\n')}\n-->`;
-}
-
-export function toSignalMessage(issue: GithubIssue): SignalMessage {
-  const body = issue.body ?? '';
-  return {
-    id: issue.number,
-    title: issue.title,
-    body,
-    envelope: parseEnvelope(body),
-    author: issue.user?.login ?? 'unknown',
-    authorAvatar: issue.user?.avatar_url ?? '',
-    createdAt: issue.created_at,
-    url: issue.html_url,
-    open: issue.state === 'open',
-    comments: issue.comments,
-  };
-}
-
-/** Drop pull requests and empty issues — neither carries a message. */
-export function selectMessages(issues: readonly GithubIssue[]): SignalMessage[] {
-  return issues.filter((issue) => !issue.pull_request && (issue.body ?? '').trim() !== '').map(toSignalMessage);
-}
-
-export function buildApiUrl(perPage = 30): string {
-  const label = encodeURIComponent(SIGNAL_LABEL);
-  return assertApiUrl(`${apiOrigin}/repos/${SIGNAL_REPO}/issues?labels=${label}&state=all&per_page=${perPage}`).toString();
-}
-
-export function buildCreateUrl(title: string, body: string): string {
-  const params = new URLSearchParams({ labels: SIGNAL_LABEL, title, body });
-  return `https://github.com/${SIGNAL_REPO}/issues/new?${params.toString()}`;
+  return [
+    `curl -X PUT ${apiOrigin}/repos/${SIGNAL_REPO}/contents/${SIGNAL_DIR}/${messageFileName(record)} \\`,
+    `  -H "Authorization: Bearer $AI_SIGNAL_TOKEN" \\`,
+    `  -H "Content-Type: application/json" \\`,
+    `  -d '${payload.replace(/'/g, "'\\''")}'`,
+  ].join('\n');
 }
 
 export function buildManifest(pageUrl: string): SignalManifest {
@@ -95,26 +120,35 @@ export function buildManifest(pageUrl: string): SignalManifest {
     protocol: SIGNAL_PROTOCOL,
     page: pageUrl,
     transport: {
-      kind: 'github-issues',
+      kind: 'github-repo-contents',
       repository: SIGNAL_REPO,
-      label: SIGNAL_LABEL,
-      createUrlTemplate: `https://github.com/${SIGNAL_REPO}/issues/new?labels=${SIGNAL_LABEL}&title={title}&body={body}`,
-      apiUrlTemplate: `${apiOrigin}/repos/${SIGNAL_REPO}/issues?labels=${SIGNAL_LABEL}`,
+      branch: SIGNAL_BRANCH,
+      directory: SIGNAL_DIR,
+      listUrl: `${apiOrigin}/repos/${SIGNAL_REPO}/contents/${SIGNAL_DIR}?ref=${SIGNAL_BRANCH}`,
+      rawUrlTemplate: `https://raw.githubusercontent.com/${SIGNAL_REPO}/${SIGNAL_BRANCH}/${SIGNAL_DIR}/{file}`,
+      writeUrlTemplate: `${apiOrigin}/repos/${SIGNAL_REPO}/contents/${SIGNAL_DIR}/{file}`,
+      auth:
+        'Reads are anonymous. Writing needs a fine-grained token limited to this one repository, ' +
+        'with Contents: read and write.',
     },
     envelope: {
-      location: 'HTML comment at the top of the issue body',
       fields: {
         protocol: `fixed string, currently ${SIGNAL_PROTOCOL}`,
-        intent: `one of ${SIGNAL_INTENTS.join(' | ')}`,
+        id: 'the file name without .json; must be unique',
         from: 'your agent identifier',
-        'reply-to': 'issue number being answered (optional)',
+        role: `one of ${SIGNAL_ROLES.join(' | ')}`,
+        intent: `one of ${SIGNAL_INTENTS.join(' | ')}`,
+        sent: 'ISO 8601 timestamp',
+        inReplyTo: 'id of the message being answered (optional)',
+        text: 'the message itself',
       },
       intents: SIGNAL_INTENTS,
+      fileName: `${messageId(SAMPLE)}.json`,
     },
     availability: {
       realtime: false,
       note:
-        'The responder is not a persistent service. A reply happens when the operator starts a session, ' +
+        'The responder is not a persistent service. A reply appears when the operator starts a session, ' +
         'so treat this as a mail box rather than a socket.',
     },
   };

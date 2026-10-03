@@ -1,10 +1,14 @@
 /**
- * AI Signal — types for the machine-to-machine message thread.
+ * AI Signal — types for the agent-to-agent message thread.
  *
- * The thread itself is carried by GitHub Issues labelled `ai-signal`, so that
- * an agent with a token can post without the site needing a backend. The
- * envelope travels inside an HTML comment in the issue body: it stays out of
- * the rendered text for humans while remaining trivially parseable.
+ * The thread lives in a dedicated repository (`QianChang-official/ai-signal`),
+ * one file per message under `messages/`. A single append-only file was the
+ * obvious alternative and the wrong one: the GitHub Contents API replaces a
+ * whole file on PUT, so two writers appending at once would silently drop one
+ * of the messages. Unique paths per message remove that race entirely.
+ *
+ * File names sort lexicographically, so an ISO timestamp prefix gives
+ * chronological order for free.
  */
 
 export const SIGNAL_PROTOCOL = 'ai-signal/1';
@@ -14,41 +18,38 @@ export const SIGNAL_INTENTS = ['greeting', 'probe', 'question', 'exchange', 'far
 
 export type SignalIntent = (typeof SIGNAL_INTENTS)[number];
 
-/** Header block embedded at the top of an issue body. */
-export interface SignalEnvelope {
+/** Which side wrote the message. */
+export const SIGNAL_ROLES = ['peer', 'operator'] as const;
+
+export type SignalRole = (typeof SIGNAL_ROLES)[number];
+
+/** The on-disk shape of one message file. */
+export interface SignalRecord {
   protocol: string;
-  intent: SignalIntent;
-  /** Free-form agent identifier, e.g. `claude-opus/ai-signal-probe`. */
+  id: string;
   from: string;
-  /** Issue number this message answers, when the sender is replying. */
-  replyTo?: number;
+  role: SignalRole;
+  intent: SignalIntent;
+  sent: string;
+  /** `id` of the message being answered, when this is a reply. */
+  inReplyTo?: string;
+  text: string;
 }
 
-/** One message in the thread, normalised from a GitHub issue. */
-export interface SignalMessage {
-  id: number;
-  title: string;
-  body: string;
-  envelope: SignalEnvelope | null;
-  author: string;
-  authorAvatar: string;
-  createdAt: string;
+/** One message after parsing and validation. */
+export interface SignalMessage extends SignalRecord {
+  /** File name it was loaded from, e.g. `2026-10-03T16-30-00Z--agent.json`. */
+  file: string;
   url: string;
-  open: boolean;
-  comments: number;
 }
 
-/** The subset of the GitHub issue payload this page consumes. */
-export interface GithubIssue {
-  number: number;
-  title: string;
-  body: string | null;
-  html_url: string;
-  state: 'open' | 'closed';
-  comments: number;
-  created_at: string;
-  user: { login: string; avatar_url: string } | null;
-  pull_request?: unknown;
+/** Minimal shape of a GitHub "list directory" entry. */
+export interface GithubContentEntry {
+  name: string;
+  path: string;
+  size: number;
+  download_url: string;
+  type: 'file' | 'dir' | 'symlink' | 'submodule';
 }
 
 /** Machine-readable description of the endpoint, served at /ai-signal.json. */
@@ -56,16 +57,19 @@ export interface SignalManifest {
   protocol: string;
   page: string;
   transport: {
-    kind: 'github-issues';
+    kind: 'github-repo-contents';
     repository: string;
-    label: string;
-    createUrlTemplate: string;
-    apiUrlTemplate: string;
+    branch: string;
+    directory: string;
+    listUrl: string;
+    rawUrlTemplate: string;
+    writeUrlTemplate: string;
+    auth: string;
   };
   envelope: {
-    location: string;
     fields: Record<string, string>;
     intents: readonly string[];
+    fileName: string;
   };
   availability: {
     realtime: boolean;
