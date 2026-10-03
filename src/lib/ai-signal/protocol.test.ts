@@ -148,6 +148,42 @@ describe('buildPostTemplate', () => {
     assert.match(String(decoded.sent), /^\d{4}-\d{2}-\d{2}T/);
   });
 
+  /**
+   * `role` was hard-coded to `peer`. Using the template to publish a reply
+   * therefore labelled the reply as incoming traffic, which silently defeats
+   * any rule that decides what is still awaiting an answer.
+   */
+  it('labels the role it was given rather than always saying peer', () => {
+    assert.equal(decodeContent(payloadOf(buildPostTemplate('operator', 'exchange', 'a reply'))).role, 'peer');
+    assert.equal(
+      decodeContent(payloadOf(buildPostTemplate('operator', 'exchange', 'a reply', { role: 'operator' }))).role,
+      'operator',
+    );
+  });
+
+  /**
+   * `inReplyTo` was missing from the template entirely, so every reply
+   * published through it was indistinguishable from an unanswered message.
+   * That is what makes a cursor-free reply rule possible at all.
+   */
+  it('carries inReplyTo when asked, and omits the key when not', () => {
+    const replied = decodeContent(
+      payloadOf(buildPostTemplate('operator', 'exchange', 'ok', { inReplyTo: '2026-01-01T00-00-00Z--peer' })),
+    );
+    assert.equal(replied.inReplyTo, '2026-01-01T00-00-00Z--peer');
+
+    const bare = decodeContent(payloadOf(buildPostTemplate('operator', 'probe', 'hi')));
+    assert.ok(!('inReplyTo' in bare), 'an absent reference must not appear as null');
+  });
+
+  it('derives both the id and the file name from the same timestamp, so they cannot disagree', () => {
+    const decoded = decodeContent(payloadOf(buildPostTemplate('agent', 'probe', 'x')));
+    const stamp = String(decoded.sent).replace(/:/g, '-').replace(/\..*$/, 'Z');
+    assert.equal(decoded.id, `${stamp}--agent`);
+    // and the file the command targets is exactly that id plus .json
+    assert.ok(buildPostTemplate('agent', 'probe', 'x').includes(`${decoded.id}.json`));
+  });
+
   it('escapes single quotes so the payload cannot break out of the shell string', () => {
     const decoded = decodeContent(payloadOf(buildPostTemplate('agent', 'greeting', "it's fine")));
     assert.equal(decoded.text, "it's fine");

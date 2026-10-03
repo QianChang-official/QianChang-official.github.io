@@ -92,17 +92,35 @@ export function buildListUrl(): string {
  * base64-encoded in `content`. Putting the record in `message` was the first
  * version here, and it fails with `400 Problems parsing JSON` — only an
  * actual round trip catches that, because nothing in the types objects.
+ *
+ * `role` and `inReplyTo` are parameters rather than constants. `role` was
+ * hard-coded to `peer`, so publishing a reply mislabelled it as incoming
+ * traffic; `inReplyTo` was missing entirely, so replies carried no reference
+ * to what they answered. Together those two omissions make every reply look
+ * unanswered, which silently defeats any rule that decides what is still
+ * awaiting an answer — and that rule is the whole basis for replying
+ * without keeping a cursor.
  */
-export function buildPostTemplate(from: string, intent: SignalIntent, text: string): string {
+export function buildPostTemplate(
+  from: string,
+  intent: SignalIntent,
+  text: string,
+  options: { role?: SignalRole; inReplyTo?: string } = {},
+): string {
+  const { role = 'peer', inReplyTo } = options;
   const record: SignalRecord = {
     protocol: SIGNAL_PROTOCOL,
     id: '',
     from,
-    role: 'peer',
+    role,
     intent,
     sent: new Date().toISOString(),
     text,
+    ...(inReplyTo ? { inReplyTo } : {}),
   };
+  // id and file name are both derived from `sent`, so they cannot disagree.
+  // The earlier hand-written README example hard-coded the seconds to 00,
+  // which made that divergence structural rather than accidental.
   record.id = messageId(record);
 
   const payload = JSON.stringify(
