@@ -5,7 +5,7 @@
  * 博客页面直接 fetch 本地 JSON，无需后端
  */
 
-import { writeFileSync, mkdirSync } from 'fs';
+import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -49,7 +49,7 @@ async function fetchText(url) {
 async function githubTrending() {
   // GitHub 趋势（非官方 API，用搜索近似）
   const d = await fetchJson(
-    'https://api.github.com/search/repositories?q=created:>2026-09-01&sort=stars&order=desc&per_page=12'
+    'https://api.github.com/search/repositories?q=created:>2026-09-01&sort=stars&order=desc&per_page=12',
   );
   return (d.items || []).map((r) => ({
     name: r.full_name,
@@ -61,9 +61,7 @@ async function githubTrending() {
 }
 
 async function earthquakes() {
-  const d = await fetchJson(
-    'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson'
-  );
+  const d = await fetchJson('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson');
   return (d.features || []).slice(0, 15).map((f) => ({
     mag: f.properties.mag,
     place: f.properties.place,
@@ -84,12 +82,8 @@ async function spaceflightNews() {
 }
 
 async function cisaKev() {
-  const d = await fetchJson(
-    'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json'
-  );
-  const vulns = (d.vulnerabilities || [])
-    .sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded))
-    .slice(0, 12);
+  const d = await fetchJson('https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json');
+  const vulns = (d.vulnerabilities || []).sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded)).slice(0, 12);
   return vulns.map((v) => ({
     cve: v.cveID,
     vendor: v.vendorProject,
@@ -111,9 +105,7 @@ async function exchangeRates() {
 }
 
 async function launches() {
-  const d = await fetchJson(
-    'https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=10&format=json'
-  );
+  const d = await fetchJson('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=10&format=json');
   return (d.results || []).map((l) => ({
     name: l.name,
     net: l.net,
@@ -127,13 +119,9 @@ async function hackerNews() {
   const ids = await fetchJson('https://hacker-news.firebaseio.com/v0/topstories.json');
   const top = (ids || []).slice(0, 12);
   const items = await Promise.all(
-    top.map((id) =>
-      fetchJson(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).catch(() => null)
-    )
+    top.map((id) => fetchJson(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).catch(() => null)),
   );
-  return items
-    .filter(Boolean)
-    .map((it) => ({ title: it.title, url: it.url, score: it.score, by: it.by }));
+  return items.filter(Boolean).map((it) => ({ title: it.title, url: it.url, score: it.score, by: it.by }));
 }
 
 async function redditWorld() {
@@ -153,7 +141,7 @@ async function gdelt() {
   // GDELT 全球事件数据库：最近的中文相关报道
   const d = await fetchJson(
     'https://api.gdeltproject.org/api/v2/doc/doc?query=china&mode=artlist&maxrecords=12&format=json&sort=datedesc',
-    { headers: { 'User-Agent': UA, Accept: 'application/json' } }
+    { headers: { 'User-Agent': UA, Accept: 'application/json' } },
   );
   return (d.articles || []).map((a) => ({
     title: a.title,
@@ -187,7 +175,7 @@ async function opensky() {
   for (const r of regions) {
     const [lat1, lon1, lat2, lon2] = r.bbox;
     const d = await fetchJson(
-      `https://opensky-network.org/api/states/all?lamin=${lat1}&lomin=${lon1}&lamax=${lat2}&lomax=${lon2}`
+      `https://opensky-network.org/api/states/all?lamin=${lat1}&lomin=${lon1}&lamax=${lat2}&lomax=${lon2}`,
     ).catch(() => null);
     const states = d?.states || [];
     const military = states.filter((s) => {
@@ -216,7 +204,7 @@ async function noaaAlerts() {
 async function worldBank() {
   // 世界银行：全球 GDP 增长最新数据
   const d = await fetchJson(
-    'https://api.worldbank.org/v2/country/WLD/indicator/NY.GDP.MKTP.KD.ZG?format=json&per_page=5&date=2020:2026'
+    'https://api.worldbank.org/v2/country/WLD/indicator/NY.GDP.MKTP.KD.ZG?format=json&per_page=5&date=2020:2026',
   );
   return (d[1] || []).filter(Boolean).map((r) => ({
     year: r.date,
@@ -291,7 +279,7 @@ for (const [name, fn] of Object.entries(tasks)) {
   } catch (e) {
     writeFileSync(
       join(OUT, `${name}.json`),
-      JSON.stringify({ ok: false, error: e.message, fetchedAt: new Date().toISOString() })
+      JSON.stringify({ ok: false, error: e.message, fetchedAt: new Date().toISOString() }),
     );
     meta.sources[name] = { ok: false, error: e.message };
     console.log(`✗ ${name}: ${e.message}`);
