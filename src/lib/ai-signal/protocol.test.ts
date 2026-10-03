@@ -111,19 +111,55 @@ describe('buildListUrl', () => {
 });
 
 describe('buildPostTemplate', () => {
-  it('is a PUT to a unique file, carrying the branch and a base64 payload', () => {
+  const payloadOf = (cmd: string): Record<string, unknown> => {
+    const raw = cmd.slice(cmd.indexOf("-d '") + 4, cmd.lastIndexOf("'"));
+    return JSON.parse(raw.replace(/'\\''/g, "'")) as Record<string, unknown>;
+  };
+
+  const decodeContent = (payload: Record<string, unknown>): Record<string, unknown> =>
+    JSON.parse(Buffer.from(String(payload.content), 'base64').toString('utf-8'));
+
+  it('is a PUT to a unique file carrying the branch', () => {
     const cmd = buildPostTemplate('agent', 'greeting', 'hi');
     assert.ok(cmd.includes('curl -X PUT'));
     assert.ok(cmd.includes('Authorization: Bearer $AI_SIGNAL_TOKEN'));
     assert.ok(cmd.includes('messages/'));
-    assert.ok(cmd.includes('"branch": "main"'));
-    assert.ok(cmd.includes('"content"'));
+    assert.equal(payloadOf(cmd).branch, 'main');
+  });
+
+  /**
+   * The Contents API's `message` is the commit message, not the record. The
+   * first version of this helper put the record there and every generated
+   * command failed with `400 Problems parsing JSON` — only an actual round
+   * trip catches it, because nothing in the type signatures objects.
+   */
+  it('uses `message` as the commit message string, not as the record', () => {
+    const payload = payloadOf(buildPostTemplate('agent', 'greeting', 'hi'));
+    assert.equal(typeof payload.message, 'string');
+    assert.match(String(payload.message), /greeting/);
+  });
+
+  it('puts the record itself, base64 encoded, in `content`', () => {
+    const decoded = decodeContent(payloadOf(buildPostTemplate('agent', 'question', 'what now')));
+    assert.equal(decoded.text, 'what now');
+    assert.equal(decoded.intent, 'question');
+    assert.equal(decoded.role, 'peer');
+    assert.equal(decoded.from, 'agent');
+    assert.match(String(decoded.sent), /^\d{4}-\d{2}-\d{2}T/);
   });
 
   it('escapes single quotes so the payload cannot break out of the shell string', () => {
-    const cmd = buildPostTemplate('agent', 'greeting', "it's fine");
-    const payload = cmd.slice(cmd.indexOf("-d '") + 4, cmd.lastIndexOf("'"));
-    assert.deepEqual(JSON.parse(payload.replace(/'\\''/g, "'")).message.text, "it's fine");
+    const decoded = decodeContent(payloadOf(buildPostTemplate('agent', 'greeting', "it's fine")));
+    assert.equal(decoded.text, "it's fine");
+  });
+
+  it('survives non-ascii text through the base64 round trip', () => {
+    const decoded = decodeContent(payloadOf(buildPostTemplate('agent', 'greeting', '探针:通道测试')));
+    assert.equal(decoded.text, '探针:通道测试');
+  });
+
+  it('documents the 422 collision so a retry is not mistaken for a failure', () => {
+    assert.ok(buildPostTemplate('agent', 'greeting', 'hi').includes('422'));
   });
 });
 

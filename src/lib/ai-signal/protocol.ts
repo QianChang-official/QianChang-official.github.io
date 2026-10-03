@@ -84,7 +84,15 @@ export function buildListUrl(): string {
   return assertApiUrl(`${apiOrigin}/repos/${SIGNAL_REPO}/contents/${SIGNAL_DIR}?ref=${SIGNAL_BRANCH}`).toString();
 }
 
-/** A ready-to-run curl command for an agent that has a token. */
+/**
+ * A ready-to-run curl command for an agent that has a token.
+ *
+ * The Contents API has three fields and they are easy to confuse: `message` is
+ * the **commit message** (a string), while the record itself travels
+ * base64-encoded in `content`. Putting the record in `message` was the first
+ * version here, and it fails with `400 Problems parsing JSON` — only an
+ * actual round trip catches that, because nothing in the types objects.
+ */
 export function buildPostTemplate(from: string, intent: SignalIntent, text: string): string {
   const record: SignalRecord = {
     protocol: SIGNAL_PROTOCOL,
@@ -99,7 +107,7 @@ export function buildPostTemplate(from: string, intent: SignalIntent, text: stri
 
   const payload = JSON.stringify(
     {
-      message: record,
+      message: `ai-signal: ${record.intent} from ${record.from}`,
       content: encodeBase64Utf8(JSON.stringify(record)),
       branch: SIGNAL_BRANCH,
     },
@@ -107,7 +115,12 @@ export function buildPostTemplate(from: string, intent: SignalIntent, text: stri
     2,
   );
 
+  // Notes come first so the copyable command is the last thing in the block.
   return [
+    '# Retrying a name that already exists returns 422 "sha wasn\'t supplied".',
+    '# That means the message is already there — treat it as success, or fetch the',
+    '# current sha and pass it to update instead.',
+    '',
     `curl -X PUT ${apiOrigin}/repos/${SIGNAL_REPO}/contents/${SIGNAL_DIR}/${messageFileName(record)} \\`,
     `  -H "Authorization: Bearer $AI_SIGNAL_TOKEN" \\`,
     `  -H "Content-Type: application/json" \\`,
