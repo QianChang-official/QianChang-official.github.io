@@ -1,7 +1,7 @@
 ---
 title: 一个数字是怎么骗人的：盘点 234 个镜像与 7991 个 skill 之后
 link: how-a-number-lies
-updated: 2026-10-04 14:00:00
+updated: 2026-10-04 16:00:00
 date: 2026-10-04 06:20:00
 tags:
   - MCP
@@ -214,7 +214,7 @@ PID 那条会**删错东西**，这条会**让人以为省了 129 GB**。
 
 **第三次**是在修订这一版时被抓到的，对象换成了参考文献。补引用时，检索方交回 24 条，
 格式规整、出处齐全——**其中两条经独立核实是编造的**：一条把 arXiv 编号指错了地方
-（arXiv:2009.03529 实际是 Haffert 等人的天体物理仪器论文，不是软件度量论文），
+（https://arxiv.org/abs/2009.03529 实际是 Haffert 等人的天体物理仪器论文，不是软件度量论文），
 一条把官方规则的编号和原文都记错了（写成 ASD-STE100 的 Rule 9.4，实际是 Rule 5.2）。
 
 **为什么这又是同一个形状**：引用是"一个名字指向一个来源"。一条编造的引用，就是一个
@@ -465,9 +465,9 @@ filepath = os.path.join(output_dir, filename)
 3. Campbell, D. T. (1979). Assessing the impact of planned social change. *Evaluation and Program Planning*, 2(1), 67-90.
 4. Yankelovich, D. (1971). Interpreting Marketing Research. *Sales Management*.
 5. Korzybski, A. (1933). *Science and Sanity: An Introduction to Non-Aristotelian Systems and General Semantics*.
-6. Amodei, D., Olah, C., Steinhardt, J., et al. (2016). Concrete Problems in AI Safety. arXiv:1606.06565.
+6. Amodei, D., Olah, C., Steinhardt, J., et al. (2016). Concrete Problems in AI Safety. https://arxiv.org/abs/1606.06565.
 7. Krakovna, V. (2020). Specification gaming: the flip side of AI ingenuity. DeepMind blog.
-8. Manheim, D. & Garrabrant, S. (2018). Categorizing Variants of Goodhart's Law. arXiv:1803.04585.
+8. Manheim, D. & Garrabrant, S. (2018). Categorizing Variants of Goodhart's Law. https://arxiv.org/abs/1803.04585.
 9. Inozemtseva, L. & Holmes, R. (2014). Coverage Is Not Strongly Correlated with Test Suite Effectiveness. *ICSE 2014*.
 10. Forsgren, N., et al. (2021). The SPACE of Developer Productivity. *ACM Queue*, 19(1).
 11. Shore, J. (2004). Fail Fast. *IEEE Software*, 21(5), 21-25.
@@ -476,11 +476,11 @@ filepath = os.path.join(output_dir, filename)
 14. ASD Simplified Technical English Maintenance Group. (2025). *ASD-STE100 Simplified Technical English, Issue 9*. https://www.asd-ste100.org/assets/files/ASD-STE100_ISSUE9.pdf
 15. ASD-STE100, Rule 1.11: "Do not use different technical nouns for the same item." https://www.asd-ste100.org/
 16. ASD-STE100, Rule 5.2: "Write only one instruction in each sentence, unless two or more actions occur at the same time." https://www.asd-ste100.org/
-17. ISO 704:2022 *Terminology work — Principles and methods*.
+17. ISO 704 (2022) *Terminology work — Principles and methods*.
 18. Kuhn, T. (2014). A Survey and Classification of Controlled Natural Languages. *Computational Linguistics*, 40(1), 121-170.
 19. Berne Convention for the Protection of Literary and Artistic Works (1886, 最新修订 1979).
 20. Choose a License. *No License*. https://choosealicense.com/no-permission/
 21. Open Source Initiative. *The Open Source Definition*. https://opensource.org/osd
-22. ISO/IEC 5962:2021 (SPDX 规范).
+22. ISO/IEC 5962 (2021) —— SPDX 规范.
 23. NTIA (2021). *The Minimum Elements For a Software Bill of Materials (SBOM)*.
 24. Karpathy, A. (2025). On applying ASD-STE100 to LLM output. X (Twitter). https://x.com/karpathy/status/2105819303471976479
