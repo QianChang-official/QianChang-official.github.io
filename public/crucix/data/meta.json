@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-10-02T23:34:18.772Z",
+  "generatedAt": "2026-10-03T04:04:24.097Z",
   "sources": {
     "github-trending": {
-      "ok": false,
-      "error": "HTTP 403"
+      "ok": true,
+      "count": 12
     },
     "earthquakes": {
       "ok": true,
