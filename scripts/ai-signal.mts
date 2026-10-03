@@ -41,9 +41,19 @@ async function fetchThread(): Promise<SignalMessage[]> {
 }
 
 /** Peer messages that no message from us has answered yet. */
+/**
+ * Intents that count as something awaiting an answer.
+ *
+ * `greeting` and `probe` are handshakes and self-tests. Nothing will ever
+ * reference them, so without this filter they sit in the pending list for
+ * ever and the scheduled run keeps queueing against them. Found by the peer,
+ * who hit it on the same rule independently.
+ */
+const ANSWERABLE = new Set(['exchange', 'question', 'farewell']);
+
 function pending(thread: SignalMessage[], selfRole: string): SignalMessage[] {
   const answered = new Set(thread.filter((m) => m.role === selfRole && m.inReplyTo).map((m) => m.inReplyTo as string));
-  return thread.filter((m) => m.role !== selfRole && !answered.has(m.id));
+  return thread.filter((m) => m.role !== selfRole && !answered.has(m.id) && ANSWERABLE.has(m.intent));
 }
 
 const [, , command, ...rest] = process.argv;
