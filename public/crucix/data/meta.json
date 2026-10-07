@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-07T11:33:01.739Z",
+  "generatedAt": "2026-10-07T18:31:08.220Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -50,8 +50,8 @@
       "error": "HTTP 400"
     },
     "worldbank-gdp": {
-      "ok": false,
-      "error": "This operation was aborted"
+      "ok": true,
+      "count": 5
     },
     "usgs-significant": {
       "ok": true,
