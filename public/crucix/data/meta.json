@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-07T23:27:37.846Z",
+  "generatedAt": "2026-10-08T04:49:04.485Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -7,11 +7,11 @@
     },
     "earthquakes": {
       "ok": true,
-      "count": 15
+      "count": 12
     },
     "spaceflight-news": {
-      "ok": false,
-      "error": "HTTP 429"
+      "ok": true,
+      "count": 10
     },
     "cisa-kev": {
       "ok": true,
