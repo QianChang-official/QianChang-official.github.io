@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-09T18:01:36.535Z",
+  "generatedAt": "2026-10-09T23:03:03.245Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -55,7 +55,7 @@
     },
     "usgs-significant": {
       "ok": true,
-      "count": 2
+      "count": 5
     },
     "spacex": {
       "ok": false,
