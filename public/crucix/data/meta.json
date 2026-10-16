@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-16T19:21:49.069Z",
+  "generatedAt": "2026-10-16T22:35:18.555Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -55,11 +55,11 @@
     },
     "usgs-significant": {
       "ok": true,
-      "count": 6
+      "count": 5
     },
     "spacex": {
       "ok": false,
-      "error": "This operation was aborted"
+      "error": "HTTP 525"
     },
     "who-outbreaks": {
       "ok": true,
