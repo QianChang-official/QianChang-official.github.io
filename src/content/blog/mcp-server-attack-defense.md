@@ -1,5 +1,5 @@
 ---
-title: 深夜自己当黑客：我把自己写的服务器打了一遍
+title: 我给自己的 MCP 服务器做了一次安全测试：62 个攻击用例，1 个真漏洞
 link: mcp-server-attack-defense
 date: 2026-09-19 23:59:00
 tags:

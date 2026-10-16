@@ -1,5 +1,5 @@
 ---
-title: 这个方案到底有没有必要存在：一次 Agent 安全方案的组会拷打
+title: 这个方案有没有必要存在：一次 Agent 安全方案的批判性复盘
 link: agent-effect-awareness
 date: 2026-09-19 23:20:00
 updated: 2026-09-20 21:00:00
