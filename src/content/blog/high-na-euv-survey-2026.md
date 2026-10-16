@@ -1,6 +1,6 @@
 ---
-title: 瑞利判据只剩一只旋钮：High-NA EUV 到底买到了什么
-description: 从三只旋钮到两本账——0.33 到 0.55 的物理、口径与经济学
+title: High-NA EUV 贵了一倍，到底买到了什么
+description: 0.33 到 0.55 NA 的物理、产能与经济账，以及谁真的在买
 link: high-na-euv-survey-2026
 date: 2026-10-14 15:00:00
 updated: 2026-10-16 22:55:00
