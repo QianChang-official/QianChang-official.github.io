@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-17T06:37:55.914Z",
+  "generatedAt": "2026-10-17T11:25:09.802Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -34,8 +34,8 @@
       "error": "HTTP 403"
     },
     "gdelt": {
-      "ok": true,
-      "count": 12
+      "ok": false,
+      "error": "fetch failed"
     },
     "nasa-eonet": {
       "ok": true,
@@ -59,7 +59,7 @@
     },
     "spacex": {
       "ok": false,
-      "error": "HTTP 525"
+      "error": "This operation was aborted"
     },
     "who-outbreaks": {
       "ok": true,
