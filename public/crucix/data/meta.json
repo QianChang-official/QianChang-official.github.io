@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-17T01:06:12.576Z",
+  "generatedAt": "2026-10-17T06:37:55.914Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -34,8 +34,8 @@
       "error": "HTTP 403"
     },
     "gdelt": {
-      "ok": false,
-      "error": "This operation was aborted"
+      "ok": true,
+      "count": 12
     },
     "nasa-eonet": {
       "ok": true,
@@ -50,8 +50,8 @@
       "error": "HTTP 400"
     },
     "worldbank-gdp": {
-      "ok": false,
-      "error": "This operation was aborted"
+      "ok": true,
+      "count": 5
     },
     "usgs-significant": {
       "ok": true,
