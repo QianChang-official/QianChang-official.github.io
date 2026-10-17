@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-16T22:35:18.555Z",
+  "generatedAt": "2026-10-17T01:06:12.576Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -7,7 +7,7 @@
     },
     "earthquakes": {
       "ok": true,
-      "count": 13
+      "count": 15
     },
     "spaceflight-news": {
       "ok": true,
@@ -35,7 +35,7 @@
     },
     "gdelt": {
       "ok": false,
-      "error": "HTTP 429"
+      "error": "This operation was aborted"
     },
     "nasa-eonet": {
       "ok": true,
@@ -50,8 +50,8 @@
       "error": "HTTP 400"
     },
     "worldbank-gdp": {
-      "ok": true,
-      "count": 5
+      "ok": false,
+      "error": "This operation was aborted"
     },
     "usgs-significant": {
       "ok": true,
