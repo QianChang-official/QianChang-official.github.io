@@ -2,8 +2,8 @@
 title: AI for Science：当人工智能真正走进科学发现，我们离“AI 科学家”还有多远？
 description: 从科学计算、科学基础模型，到科研 Agent、自主实验室与“第 301 次实验”
 link: ai-for-science
-date: 2026-10-19 18:11:01
-updated: 2026-10-19 18:11:01
+date: 2026-10-19 19:25:14
+updated: 2026-10-19 19:25:14
 tags:
   - AI for Science
   - 科研自动化
@@ -14,7 +14,7 @@ categories:
   - 技术
 ---
 
-> 从科学计算、科学基础模型，到科研 Agent、自主实验室与“第 301 次实验”。全文 19 章、约 8.2 万字，11 张图随文插入；文中关键数字与判断随文标注证据来源（如 [作者自述]、[独立审计]、[二手报道]）。
+> 从科学计算、科学基础模型，到科研 Agent、自主实验室与“第 301 次实验”。全文 19 章、约 8.7 万字，11 张图随文插入；文中关键数字与判断随文标注证据来源，技术事实的出处见文末参考文献（51 项，2026-10-19 经 arXiv/Crossref/官方发布页逐条核验）。
 
 ---
 
@@ -3309,3 +3309,79 @@ D 为什么关键？因为一个系统可以在 A、B、C 上全部胜出，同�
 真正的分界线，不在它能做多少，而在它做完之后，我们能不能继续追问"凭什么"，并沿着证据找到答案。
 
 ---
+
+### 参考文献
+
+> **方法说明**：以下 51 项对应正文各章的事实来源。核验通道与日期：arXiv API、Crossref API、PMLR 及 BIPM、NASA、NIST、Stanford、个人博客等官方页面，2026-10-19；arXiv 条目的版本号与正文标注逐条一致。三处诚实标注：① 第 9 条 POPPER 按正文 [ICML 2025] 口径著录，其公开题录暂未能从上述 API 定位，编号待补；② 第 6 条 Robin 正文所称 Nature 刊发版未能定位到独立题录，按可核验的预印本登记；③ 第 35–37 条属工程建设类国家标准，不在国家标准全文公开系统收录范围，名称按标准文本著录，正文所引条款在研究阶段经标准原文 PDF 逐条核验。
+
+**一、自主科研系统：论文与独立评估**
+
+1. Trehan D., Chopra P. Why LLMs Aren't Scientists Yet: Lessons from Four Autonomous Research Attempts. arXiv&#58;2601.03315 (2026). [abs](https://arxiv.org/abs/2601.03315)
+2. Beel J., Kan M.-Y., Baumgart M. 等. Evaluating Sakana's AI Scientist: Bold Claims, Mixed Results, and a Promising Future? *SIGIR Forum*, 2025. arXiv&#58;2502.14297. [abs](https://arxiv.org/abs/2502.14297)
+3. Luo Z., Kasirzadeh A., Shah N.B. 等. The More You Automate, the Less You See: Hidden Pitfalls of AI Scientist Systems. NeurIPS 2025 AI4Science Workshop（Spotlight）. arXiv&#58;2509.08713. [abs](https://arxiv.org/abs/2509.08713)
+4. Lu C., Lu C. 等（Sakana AI）. The AI Scientist: Towards Fully Automated Open-Ended Scientific Discovery. arXiv&#58;2408.06292 (2024). [abs](https://arxiv.org/abs/2408.06292)
+5. Gottweis J., Weng W.-H. Accelerating scientific discovery with Co-Scientist. arXiv&#58;2502.18864 (2025). [abs](https://arxiv.org/abs/2502.18864)
+6. Ghareeb A.E., Chang B., Mitchener L. 等. Robin: A multi-agent system for automating scientific discovery. arXiv&#58;2505.13400 (2025). [abs](https://arxiv.org/abs/2505.13400)
+7. Mitchener L., Yiu A., Chang B. 等. Kosmos: An AI Scientist for Autonomous Discovery. arXiv&#58;2511.02824 (2025, v2). [abs](https://arxiv.org/abs/2511.02824)
+8. Xia S., Sun Y., Liu P. SR-Scientist: Scientific Equation Discovery With Agentic AI. ICLR 2026. arXiv&#58;2510.11661. [abs](https://arxiv.org/abs/2510.11661)
+9. POPPER：面向 Agent 的顺序证伪框架（falsification 原则、序贯检验控制第一类错误、六领域展示）。ICML 2025。（公开题录编号待补，见方法说明）
+
+**二、案例系统的一级文献**
+
+10. Jumper J. 等. Highly accurate protein structure prediction with AlphaFold. *Nature*, 2021, 596: 583–589. [10.1038/s41586-021-03819-2](https://doi.org/10.1038/s41586-021-03819-2)
+11. Merchant A. 等. Scaling deep learning for materials discovery. *Nature*, 2023, 624: 80–85. [10.1038/s41586-023-06735-9](https://doi.org/10.1038/s41586-023-06735-9)
+12. Szymanski N.J. 等. An autonomous laboratory for the accelerated synthesis of inorganic materials. *Nature*, 2023, 624: 86–91. [10.1038/s41586-023-06734-w](https://doi.org/10.1038/s41586-023-06734-w)
+13. Szymanski N.J. 等. Author Correction: An autonomous laboratory for the accelerated synthesis of inorganic materials. *Nature*, 2026, 650: E1. [10.1038/s41586-025-09992-y](https://doi.org/10.1038/s41586-025-09992-y)
+14. Atomic functional site scaffolding in biopolymers with RFdiffusion3. *Science*, 2026. [10.1126/science.aeh2982](https://doi.org/10.1126/science.aeh2982)
+15. Biomni: A General-Purpose Biomedical AI Agent. bioRxiv, 2025-05-30. [10.1101/2025.05.30.656746](https://doi.org/10.1101/2025.05.30.656746)
+16. Bodnar C., Bruinsma W.P. 等. A Foundation Model for the Earth System（Aurora）. arXiv&#58;2405.13063 (2024). [abs](https://arxiv.org/abs/2405.13063)
+
+**三、基准测试与方法论文**
+
+17. Chen Z., Chen S., Ning Y. 等. ScienceAgentBench: Toward Rigorous Assessment of Language Agents for Data-Driven Scientific Discovery. ICLR 2025. arXiv&#58;2410.05080 (v1 2024-10-07 / v3 2025-03-31). [abs](https://arxiv.org/abs/2410.05080)
+18. Siegel Z.S., Kapoor S., Nadgir N. 等. CORE-Bench: Fostering the Credibility of Published Research Through a Computational Reproducibility Agent Benchmark. arXiv&#58;2409.11363 (v1 2024-09-17 / v2 2026-06-22). [abs](https://arxiv.org/abs/2409.11363)
+19. Chan J.S., Chowdhury N., Jaffe O. 等. MLE-bench: Evaluating Machine Learning Agents on Machine Learning Engineering. arXiv&#58;2410.07095 (v1 2024-10-09 / v6 2025-02-26). [abs](https://arxiv.org/abs/2410.07095)
+20. Laurent J.M., Janizek J.D., Ruzo M. 等. LAB-Bench: Measuring Capabilities of Language Models for Biology Research. arXiv&#58;2407.10362 (v1 2024-07-14 / v3 2024-07-17). [abs](https://arxiv.org/abs/2407.10362)
+21. Starace G., Jaffe O. 等. PaperBench: Evaluating AI's Ability to Replicate AI Research. arXiv&#58;2504.01848 (2025). [abs](https://arxiv.org/abs/2504.01848)
+22. Chollet F. On the Measure of Intelligence（ARC 基准）. arXiv&#58;1911.01547 (2019). [abs](https://arxiv.org/abs/1911.01547)
+23. Jiang Z., Schmidt D. 等. AIDE: AI-Driven Exploration in the Space of Code. arXiv&#58;2502.13138 (2025). [abs](https://arxiv.org/abs/2502.13138)
+24. Chen X., Lin M. 等. Teaching Large Language Models to Self-Debug. arXiv&#58;2304.05128 (2023). [abs](https://arxiv.org/abs/2304.05128)
+25. AutoGPT（通用 Agent scaffold，开源项目）。[github.com/Significant-Gravitas/AutoGPT](https://github.com/Significant-Gravitas/AutoGPT)
+
+**四、记忆与经验研究**
+
+26. Luo J., Tian Y., Cao C. 等. From Storage to Experience: A Survey on the Evolution of LLM Agent Memory Mechanisms. ACL 2026 Findings. arXiv&#58;2605.06716. [abs](https://arxiv.org/abs/2605.06716)
+27. Milosevic N. Episodic-Semantic Memory Architecture for Long-Horizon Scientific Agents. arXiv&#58;2605.17625 (2026). [abs](https://arxiv.org/abs/2605.17625)
+28. Zhang D., Lin Y., Wu Z. 等. Useful Memories Become Faulty When Continuously Updated by LLMs. arXiv&#58;2605.12978 (2026, v2). [abs](https://arxiv.org/abs/2605.12978)
+29. Liu Z. Memory Contagion: Cross-Temporal Propagation of Evaluator Bias via Agent Memory. arXiv&#58;2606.23195 (2026, v2). [abs](https://arxiv.org/abs/2606.23195)
+30. Ma E., Zhou Y., Huang W.-C. 等. MemAudit: Auditing Long-Term Agent Memory via Hidden User-State Recovery（MEMPROBE 基准）. arXiv&#58;2606.24595 (2026, v3). [abs](https://arxiv.org/abs/2606.24595)
+31. Chao H., Bai Y., Sheng R. 等. STALE: Can LLM Agents Know When Their Memories Are No Longer Valid? arXiv&#58;2605.06527 (2026). [abs](https://arxiv.org/abs/2605.06527)
+32. Dongre V., Rossi R.A., Lai V.D. 等. Drift No More? Context Equilibria in Multi-Turn LLM Interactions. arXiv&#58;2510.07777 (2025, v2). [abs](https://arxiv.org/abs/2510.07777)
+
+**五、科学数据的溯源与质量**
+
+33. Wilkinson M.D. 等. The FAIR Guiding Principles for scientific data management and stewardship. *Scientific Data*, 2016, 3: 160018. [10.1038/sdata.2016.18](https://doi.org/10.1038/sdata.2016.18)
+34. PROV-AGENT: Unified Provenance for Tracking AI Agent Interactions in Agentic Workflows. *IEEE International Conference on e-Science*, 2025. [10.1109/escience65000.2025.00093](https://doi.org/10.1109/escience65000.2025.00093)
+
+**六、标准与规范**
+
+35. GB 50346—2011《生物安全实验室建筑技术规范》（现行版；另有局部修订征求意见稿）。
+36. GB 50457—2019《医药工业洁净厂房设计标准》（正文另引其修订稿条款）。
+37. GB 50073—2013《洁净厂房设计规范》。
+38. GB/T 25915.1—2010《洁净室及相关受控环境 第 1 部分》（与 ISO 14644-1 等级体系等同）。
+39. GB/T 36066—2025《洁净室检测技术要求与应用》（2025-11-01 实施）。
+40. GB/T 47506—2026《洁净室及相关受控环境 微振动控制技术要求》（2026-04-30 发布，2026-11-01 实施）。
+41. ISO 14644-1 Cleanrooms and associated controlled environments — Part 1: Classification of air cleanliness by particle concentration.
+
+**七、报告、官方发布页与公开信**
+
+42. 中国科学技术信息研究所、北京科学智能研究院、上海人工智能实验室等：《AI for Science 创新图谱 2026》，2026 年 3 月于中关村论坛发布（编写机构官方发布页）。
+43. Anthropic. Model Hardware Standard（模型硬件标准），2026-08-27 研究预览（机构公开资料）。
+44. Microsoft Research. Aurora 1.5 发布说明，2026-07-10（机构公开资料）。
+45. Biomni 项目官方页。[biomni.stanford.edu](https://biomni.stanford.edu/)
+46. Tao T. 等. A severe misalignment of AI in mathematics（数学家公开信），2026-09-11。[terrytao.wordpress.com](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/)
+47. Gray J. 第四范式演讲（NRC-CSTB），2007-01-11。
+48. Hey T., Tansley S., Tolle K.（编）. *The Fourth Paradigm: Data-Intensive Scientific Discovery*. Microsoft Research, 2009。
+49. BIPM. CIPM 互认协议（CIPM MRA）官方说明。[bipm.org/en/cipm-mra](https://www.bipm.org/en/cipm-mra)
+50. NIST. 关键比对（key comparisons）说明（机构公开资料）。
+51. NASA. 火星通信与信号延迟公开材料（单程约 3–22 分钟）（机构公开资料）。
