@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-19T19:03:22.786Z",
+  "generatedAt": "2026-10-19T23:21:13.318Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -10,8 +10,8 @@
       "count": 15
     },
     "spaceflight-news": {
-      "ok": false,
-      "error": "This operation was aborted"
+      "ok": true,
+      "count": 10
     },
     "cisa-kev": {
       "ok": true,
@@ -55,7 +55,7 @@
     },
     "usgs-significant": {
       "ok": true,
-      "count": 5
+      "count": 4
     },
     "spacex": {
       "ok": false,
