@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-19T12:19:18.108Z",
+  "generatedAt": "2026-10-19T19:03:22.786Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -10,8 +10,8 @@
       "count": 15
     },
     "spaceflight-news": {
-      "ok": true,
-      "count": 10
+      "ok": false,
+      "error": "This operation was aborted"
     },
     "cisa-kev": {
       "ok": true,
@@ -59,7 +59,7 @@
     },
     "spacex": {
       "ok": false,
-      "error": "This operation was aborted"
+      "error": "HTTP 525"
     },
     "who-outbreaks": {
       "ok": true,
