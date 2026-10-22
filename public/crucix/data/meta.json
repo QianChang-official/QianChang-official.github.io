@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-22T18:20:11.409Z",
+  "generatedAt": "2026-10-22T22:08:41.666Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -27,7 +27,7 @@
     },
     "hacker-news": {
       "ok": true,
-      "count": 12
+      "count": 11
     },
     "reddit-world": {
       "ok": false,
@@ -59,7 +59,7 @@
     },
     "spacex": {
       "ok": false,
-      "error": "HTTP 525"
+      "error": "This operation was aborted"
     },
     "who-outbreaks": {
       "ok": true,
