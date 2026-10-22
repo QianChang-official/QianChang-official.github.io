@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T22:08:25.501Z",
+  "generatedAt": "2026-10-22T01:16:20.377Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -59,7 +59,7 @@
     },
     "spacex": {
       "ok": false,
-      "error": "This operation was aborted"
+      "error": "HTTP 525"
     },
     "who-outbreaks": {
       "ok": true,
