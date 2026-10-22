@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-22T13:30:54.044Z",
+  "generatedAt": "2026-10-22T18:20:11.409Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -35,7 +35,7 @@
     },
     "gdelt": {
       "ok": false,
-      "error": "fetch failed"
+      "error": "HTTP 429"
     },
     "nasa-eonet": {
       "ok": true,
@@ -55,11 +55,11 @@
     },
     "usgs-significant": {
       "ok": true,
-      "count": 3
+      "count": 4
     },
     "spacex": {
       "ok": false,
-      "error": "This operation was aborted"
+      "error": "HTTP 525"
     },
     "who-outbreaks": {
       "ok": true,
