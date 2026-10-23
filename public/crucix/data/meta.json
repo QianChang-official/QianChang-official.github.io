@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-22T22:08:41.666Z",
+  "generatedAt": "2026-10-23T01:15:32.658Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -27,7 +27,7 @@
     },
     "hacker-news": {
       "ok": true,
-      "count": 11
+      "count": 12
     },
     "reddit-world": {
       "ok": false,
@@ -35,7 +35,7 @@
     },
     "gdelt": {
       "ok": false,
-      "error": "HTTP 429"
+      "error": "This operation was aborted"
     },
     "nasa-eonet": {
       "ok": true,
