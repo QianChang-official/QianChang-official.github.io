@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-10-24T05:25:55.119Z",
+  "generatedAt": "2026-10-24T10:23:39.378Z",
   "sources": {
     "github-trending": {
-      "ok": false,
-      "error": "HTTP 403"
+      "ok": true,
+      "count": 12
     },
     "earthquakes": {
       "ok": true,
@@ -35,7 +35,7 @@
     },
     "gdelt": {
       "ok": false,
-      "error": "fetch failed"
+      "error": "This operation was aborted"
     },
     "nasa-eonet": {
       "ok": true,
@@ -59,7 +59,7 @@
     },
     "spacex": {
       "ok": false,
-      "error": "HTTP 525"
+      "error": "This operation was aborted"
     },
     "who-outbreaks": {
       "ok": true,
