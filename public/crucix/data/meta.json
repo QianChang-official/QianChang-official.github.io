@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-24T20:19:44.096Z",
+  "generatedAt": "2026-10-24T22:55:29.524Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -35,7 +35,7 @@
     },
     "gdelt": {
       "ok": false,
-      "error": "This operation was aborted"
+      "error": "fetch failed"
     },
     "nasa-eonet": {
       "ok": true,
