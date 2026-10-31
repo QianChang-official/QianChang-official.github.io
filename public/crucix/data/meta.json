@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-10-31T13:22:04.856Z",
+  "generatedAt": "2026-10-31T18:14:14.085Z",
   "sources": {
     "github-trending": {
-      "ok": false,
-      "error": "HTTP 403"
+      "ok": true,
+      "count": 12
     },
     "earthquakes": {
       "ok": true,
-      "count": 11
+      "count": 10
     },
     "spaceflight-news": {
       "ok": true,
