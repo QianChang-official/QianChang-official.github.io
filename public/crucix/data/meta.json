@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-02T17:52:46.745Z",
+  "generatedAt": "2026-11-03T00:36:41.029Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -10,8 +10,8 @@
       "count": 15
     },
     "spaceflight-news": {
-      "ok": true,
-      "count": 10
+      "ok": false,
+      "error": "This operation was aborted"
     },
     "cisa-kev": {
       "ok": true,
