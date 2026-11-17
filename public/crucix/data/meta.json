@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-17T16:43:16.607Z",
+  "generatedAt": "2026-11-17T23:45:28.132Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -35,11 +35,11 @@
     },
     "gdelt": {
       "ok": false,
-      "error": "HTTP 429"
+      "error": "fetch failed"
     },
     "nasa-eonet": {
-      "ok": false,
-      "error": "HTTP 500"
+      "ok": true,
+      "count": 12
     },
     "opensky-military": {
       "ok": true,
@@ -47,7 +47,7 @@
     },
     "noaa-alerts": {
       "ok": false,
-      "error": "HTTP 503"
+      "error": "HTTP 400"
     },
     "worldbank-gdp": {
       "ok": true,
