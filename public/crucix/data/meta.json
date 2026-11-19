@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-19T06:12:15.211Z",
+  "generatedAt": "2026-11-19T16:21:02.252Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -22,8 +22,8 @@
       "count": 3
     },
     "launches": {
-      "ok": false,
-      "error": "This operation was aborted"
+      "ok": true,
+      "count": 10
     },
     "hacker-news": {
       "ok": true,
@@ -35,7 +35,7 @@
     },
     "gdelt": {
       "ok": false,
-      "error": "fetch failed"
+      "error": "HTTP 429"
     },
     "nasa-eonet": {
       "ok": true,
