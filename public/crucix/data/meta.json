@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-19T23:24:45.474Z",
+  "generatedAt": "2026-11-20T05:57:25.038Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -35,11 +35,11 @@
     },
     "gdelt": {
       "ok": false,
-      "error": "This operation was aborted"
+      "error": "HTTP 429"
     },
     "nasa-eonet": {
-      "ok": true,
-      "count": 12
+      "ok": false,
+      "error": "HTTP 500"
     },
     "opensky-military": {
       "ok": true,
