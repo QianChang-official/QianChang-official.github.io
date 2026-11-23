@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-23T02:18:14.513Z",
+  "generatedAt": "2026-11-23T11:53:10.488Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -7,7 +7,7 @@
     },
     "earthquakes": {
       "ok": true,
-      "count": 14
+      "count": 15
     },
     "spaceflight-news": {
       "ok": true,
@@ -50,12 +50,12 @@
       "error": "HTTP 400"
     },
     "worldbank-gdp": {
-      "ok": false,
-      "error": "This operation was aborted"
+      "ok": true,
+      "count": 5
     },
     "usgs-significant": {
       "ok": true,
-      "count": 7
+      "count": 8
     },
     "spacex": {
       "ok": false,
