@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-23T23:27:34.240Z",
+  "generatedAt": "2026-11-24T08:41:55.560Z",
   "sources": {
     "github-trending": {
       "ok": true,
@@ -7,7 +7,7 @@
     },
     "earthquakes": {
       "ok": true,
-      "count": 15
+      "count": 8
     },
     "spaceflight-news": {
       "ok": true,
